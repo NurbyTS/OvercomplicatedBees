@@ -1,0 +1,38 @@
+{
+  "color": "#d99b35",
+  "stripe_color": "#4a321b",
+  "outline_color": "#24180d",
+  "nest_color": "#8f6631",
+  "default_chromosome": {
+    "lifespan": {
+      "lifespan": 2
+    },
+    "fertility": {
+      "fertility": 3
+    },
+    "productivity": {
+      "productivity": 1.25
+    },
+    "territory": {
+      "territory": [6, 3]
+    },
+    "flower": {
+      "flower": "minecraft:flowers"
+    }
+  },
+  "products": [
+    {
+      "ingredient": {
+        "item": "minecraft:honeycomb"
+      },
+      "count": 1,
+      "chance": 0.9
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:oak_sapling"
+      },
+      "chance": 0.05
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.141'
+    id 'idea'
+}
+
+tasks.named('wrapper', Wrapper).configure {
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-${minecraft_version}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+    exclude 'src/generated/**/.cache'
+}
+
+neoForge {
+    version = project.neo_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        gameTestServer {
+            type = 'gameTestServer'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        data {
+            data()
+            programArguments.addAll(
+                    '--mod', project.mod_id,
+                    '--all',
+                    '--output', file('src/generated/resources/').getAbsolutePath(),
+                    '--existing', file('src/main/resources/').getAbsolutePath()
+            )
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.test
+        }
+    }
+}
+
+repositories {
+    maven {
+        name = "Jared's Maven"
+        url = "https://maven.blamejared.com/"
+    }
+
+    maven {
+        name = "TerraformersMC"
+        url = "https://maven.terraformersmc.com/"
+    }
+
+    maven {
+        name = "Shedaniel"
+        url = "https://maven.shedaniel.me/"
+    }
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "CurseForge"
+                url = "https://www.cursemaven.com/"
+            }
+        }
+
+        filter {
+            includeGroup "curse.maven"
+        }
+    }
+
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven/"
+            }
+        }
+
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+
+    mavenLocal()
+
+    flatDir {
+        dir 'libs'
+    }
+}
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+dependencies {
+    compileOnly "mezz.jei:jei-${minecraft_version}-common-api:${jei_version}"
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge-api:${jei_version}"
+
+    compileOnly "dev.emi:emi-neoforge:${emi_version}:api"
+
+    if (runtime_recipe_viewer == "jei") {
+        localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+    } else if (runtime_recipe_viewer == "rei") {
+        localRuntime "me.shedaniel:RoughlyEnoughItems-neoforge:${rei_version}"
+    } else if (runtime_recipe_viewer == "emi") {
+        localRuntime "dev.emi:emi-neoforge:${emi_version}"
+    } else if (runtime_recipe_viewer == "emi+") {
+        localRuntime "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
+        localRuntime "dev.emi:emi-neoforge:${emi_version}"
+    }
+
+    if (runtime_biome_test == "bop") {
+        localRuntime "curse.maven:biomes-o-plenty-220318:${bop_id}"
+        localRuntime "curse.maven:glitchcore-955399:${glitchcore_id}"
+        localRuntime "curse.maven:terrablender-940057:${terrablender_id}"
+    } else if (runtime_biome_test == "tl") {
+        localRuntime "curse.maven:terralith-513688:${terralith_id}"
+    } else if (runtime_biome_test == "bwg") {
+        localRuntime "curse.maven:oh-the-biomes-weve-gone-1070751:${bwg_id}"
+        localRuntime "curse.maven:terrablender-940057:${terrablender_id}"
+        localRuntime "curse.maven:corgilib-693313:7773534"
+        localRuntime "curse.maven:geckolib-388172:8350073"
+        localRuntime "curse.maven:oh-the-trees-youll-grow-962544:8096180"
+    }
+}
+
+def generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    def replaceProperties = [
+            minecraft_version     : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version           : neo_version,
+            neo_version_range     : neo_version_range,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+            mod_authors            : mod_authors,
+            mod_description       : mod_description
+    ]
+
+    inputs.properties replaceProperties
+    expand replaceProperties
+
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            url = "file://${project.projectDir}/repo"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}

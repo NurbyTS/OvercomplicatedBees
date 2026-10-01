@@ -1,0 +1,29 @@
+{
+  "color": "#f5c542",
+  "stripe_color": "#3b2f1f",
+  "outline_color": "#211b13",
+  "nest_color": "#c89b3c",
+  "default_chromosome": {
+    "lifespan": {
+      "lifespan": 1
+    },
+    "fertility": {
+      "fertility": 2
+    },
+    "productivity": {
+      "productivity": 1.0
+    },
+    "territory": {
+      "territory": [4, 2]
+    }
+  },
+  "products": [
+    {
+      "ingredient": {
+        "item": "minecraft:honeycomb"
+      },
+      "count": 1,
+      "chance": 0.8
+    }
+  ]
+}

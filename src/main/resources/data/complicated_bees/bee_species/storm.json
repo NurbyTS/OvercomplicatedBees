@@ -1,0 +1,35 @@
+{
+  "color": "#6b78a8",
+  "stripe_color": "#d8dce8",
+  "outline_color": "#252a42",
+  "nest_color": "#59627e",
+  "default_chromosome": {
+    "weatherproof": {
+      "value": true
+    },
+    "active_time": {
+      "random": false,
+      "active_time": [
+        {
+          "start": 0,
+          "end": 12000
+        }
+      ]
+    },
+    "effect": {
+      "effect": "minecraft:speed"
+    },
+    "productivity": {
+      "productivity": 1.5
+    }
+  },
+  "products": [
+    {
+      "ingredient": {
+        "item": "minecraft:honeycomb"
+      },
+      "count": 2,
+      "chance": 0.6
+    }
+  ]
+}
