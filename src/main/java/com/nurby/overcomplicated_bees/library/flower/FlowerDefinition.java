@@ -12,22 +12,10 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.List;
 
-public record FlowerDefinition(
-        List<ResourceLocation> blocks,
-        List<ResourceLocation> tags
-) {
-    public static final Codec<FlowerDefinition> CODEC =
-            RecordCodecBuilder.create(instance ->
-                    instance.group(
-                            ResourceLocation.CODEC.listOf()
-                                    .optionalFieldOf("blocks", List.of())
-                                    .forGetter(FlowerDefinition::blocks),
+public record FlowerDefinition(List<ResourceLocation> blocks, List<ResourceLocation> tags) {
+    public static final Codec<FlowerDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(ResourceLocation.CODEC.listOf().optionalFieldOf("blocks", List.of()).forGetter(FlowerDefinition::blocks),
 
-                            ResourceLocation.CODEC.listOf()
-                                    .optionalFieldOf("tags", List.of())
-                                    .forGetter(FlowerDefinition::tags)
-                    ).apply(instance, FlowerDefinition::new)
-            );
+            ResourceLocation.CODEC.listOf().optionalFieldOf("tags", List.of()).forGetter(FlowerDefinition::tags)).apply(instance, FlowerDefinition::new));
 
     public boolean isFlower(Level level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);

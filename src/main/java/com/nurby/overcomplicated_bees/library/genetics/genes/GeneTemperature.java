@@ -1,36 +1,25 @@
 package com.nurby.overcomplicated_bees.library.genetics.genes;
 
-import com.nurby.overcomplicated_bees.library.genetics.Gene;
 import com.nurby.overcomplicated_bees.library.genetics.gene_values.Temperature;
 import com.nurby.overcomplicated_bees.library.genetics.gene_values.Tolerance;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 
-public class GeneTemperature extends Gene<Float> {
+public class GeneTemperature extends GeneWithTolerance<Float> {
     public static final String DATA = "temperature";
-    public static final String TOLERANCE = "tolerance";
 
     private float temperature;
-    private Tolerance tolerance;
 
     // Registry constructor
     public GeneTemperature(ResourceLocation id) {
         super(id, false);
         this.temperature = defaultValue();
-        this.tolerance = Tolerance.NONE;
     }
 
-    protected GeneTemperature(
-            ResourceLocation id,
-            float temperature,
-            Tolerance tolerance,
-            boolean dominant
-    ) {
-        super(id, dominant);
+    protected GeneTemperature(ResourceLocation id, float temperature, Tolerance tolerance, boolean dominant) {
+        super(id, temperature, tolerance, dominant);
         this.temperature = temperature;
-        this.tolerance = tolerance;
     }
 
     public float getTemperature() {
@@ -42,18 +31,19 @@ public class GeneTemperature extends Gene<Float> {
         return this;
     }
 
-    public Tolerance getTolerance() {
-        return tolerance;
-    }
-
-    public GeneTemperature setTolerance(Tolerance tolerance) {
-        this.tolerance = tolerance;
-        return this;
-    }
-
     @Override
     public boolean isRequired() {
         return true;
+    }
+
+    @Override
+    public int sortingOrder() {
+        return 3;
+    }
+
+    @Override
+    public boolean advanced() {
+        return false;
     }
 
     @Override
@@ -67,37 +57,31 @@ public class GeneTemperature extends Gene<Float> {
     }
 
     @Override
-    protected void serializeValue(CompoundTag tag) {
+    protected void serializePrimaryValue(CompoundTag tag) {
         tag.putFloat(DATA, temperature);
-        tag.putString(TOLERANCE, tolerance.getName());
     }
 
     @Override
-    public GeneTemperature deserialize(CompoundTag tag) {
-        Tolerance tolerance = tag.contains(TOLERANCE)
-                ? Tolerance.getFromString(tag.getString(TOLERANCE))
-                : Tolerance.NONE;
-
-        return new GeneTemperature(
-                id,
-                tag.getFloat(DATA),
-                tolerance,
-                tag.getBoolean(DOMINANT)
-        );
+    protected Float deserializePrimaryValue(CompoundTag tag) {
+        // Handle string-based temperature names from old_species format
+        if (tag.contains(DATA) && tag.get(DATA) instanceof net.minecraft.nbt.StringTag) {
+            return Temperature.getFromString(tag.getString(DATA));
+        }
+        return tag.getFloat(DATA);
     }
 
     @Override
-    public MutableComponent getComponent() {
-        return Temperature.getComponent(temperature);
+    protected GeneTemperature createInstance(Float value, Tolerance tolerance, boolean dominant) {
+        return new GeneTemperature(id, value, tolerance, dominant);
+    }
+
+    @Override
+    public MutableComponent getValueComponent() {
+        return Temperature.getComponent(temperature).append(" (").append(String.valueOf(Temperature.getLevel(temperature))).append(") | ").append(Tolerance.getComponent(tolerance));
     }
 
     @Override
     public GeneTemperature copy() {
-        return new GeneTemperature(
-                id,
-                temperature,
-                tolerance,
-                dominant
-        );
+        return new GeneTemperature(id, temperature, tolerance, dominant);
     }
 }

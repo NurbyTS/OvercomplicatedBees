@@ -2,6 +2,7 @@ package com.nurby.overcomplicated_bees.library.genetics.genes;
 
 import com.nurby.overcomplicated_bees.library.genetics.Gene;
 import com.nurby.overcomplicated_bees.library.genetics.gene_values.Lifespan;
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -18,11 +19,7 @@ public class GeneLifespan extends Gene<Integer> {
         this.lifespan = defaultValue();
     }
 
-    protected GeneLifespan(
-            ResourceLocation id,
-            int lifespan,
-            boolean dominant
-    ) {
+    protected GeneLifespan(ResourceLocation id, int lifespan, boolean dominant) {
         super(id, dominant);
         this.lifespan = lifespan;
     }
@@ -42,6 +39,16 @@ public class GeneLifespan extends Gene<Integer> {
     }
 
     @Override
+    public int sortingOrder() {
+        return 1;
+    }
+
+    @Override
+    public boolean advanced() {
+        return false;
+    }
+
+    @Override
     public Integer value() {
         return lifespan;
     }
@@ -57,67 +64,31 @@ public class GeneLifespan extends Gene<Integer> {
     }
 
     @Override
-    public GeneLifespan deserialize(CompoundTag tag) {
-        return new GeneLifespan(
-                id,
-                tag.getInt(DATA),
-                tag.getBoolean(DOMINANT)
-        );
+    protected GeneLifespan deserializeValue(CompoundTag tag, boolean dominant) {
+        int lifespan;
+
+        // Handle string-based lifespan names from old_species format
+        if (tag.contains(DATA) && tag.get(DATA) instanceof net.minecraft.nbt.StringTag) {
+            lifespan = Lifespan.getFromName(tag.getString(DATA));
+        } else {
+            lifespan = tag.getInt(DATA);
+        }
+
+        return new GeneLifespan(id, lifespan, dominant);
     }
 
     @Override
     public MutableComponent getComponent() {
-        MutableComponent component = Component.translatable(
-                "gene.complicated_bees.lifespan." + getLifespanName()
-        );
-
-        if (lifespan >= 90) {
-            int pluses = (lifespan - 90) / 15;
-
-            for (int i = 0; i < pluses; i++) {
-                component.append("+");
-            }
-        } else if (lifespan < 15 && lifespan >= 0) {
-            int pluses = (15 - lifespan) / 5;
-
-            for (int i = 0; i < pluses; i++) {
-                component.append("+");
-            }
-        }
-
-        return component;
+        return getValueComponent().append(" ").append(Component.translatable(TranslationKeys.GENE_LIFESPAN_APPEND));
     }
 
-    private String getLifespanName() {
-        if (lifespan == -1) {
-            return "immortal";
-        }
-        else if (lifespan == 0) {
-            return "dead";
-        }
-        else if (lifespan < 20) {
-            return "shortest";
-        } else if (lifespan < 30) {
-            return "shorter";
-        } else if (lifespan < 42) {
-            return "short";
-        } else if (lifespan < 58) {
-            return "average";
-        } else if (lifespan < 70) {
-            return "long";
-        } else if (lifespan < 83) {
-            return "longer";
-        } else {
-            return "longest";
-        }
+    @Override
+    public MutableComponent getValueComponent() {
+        return Lifespan.getComponent(lifespan);
     }
 
     @Override
     public GeneLifespan copy() {
-        return new GeneLifespan(
-                id,
-                lifespan,
-                dominant
-        );
+        return new GeneLifespan(id, lifespan, dominant);
     }
 }

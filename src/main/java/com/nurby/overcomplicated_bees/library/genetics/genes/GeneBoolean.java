@@ -1,6 +1,7 @@
 package com.nurby.overcomplicated_bees.library.genetics.genes;
 
 import com.nurby.overcomplicated_bees.library.genetics.Gene;
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -17,11 +18,7 @@ public class GeneBoolean extends Gene<Boolean> {
         this.value = defaultValue();
     }
 
-    protected GeneBoolean(
-            ResourceLocation id,
-            boolean value,
-            boolean dominant
-    ) {
+    protected GeneBoolean(ResourceLocation id, boolean value, boolean dominant) {
         super(id, dominant);
         this.value = value;
     }
@@ -41,6 +38,16 @@ public class GeneBoolean extends Gene<Boolean> {
     }
 
     @Override
+    public int sortingOrder() {
+        return 10;
+    }
+
+    @Override
+    public boolean advanced() {
+        return true;
+    }
+
+    @Override
     public Boolean value() {
         return value;
     }
@@ -56,27 +63,27 @@ public class GeneBoolean extends Gene<Boolean> {
     }
 
     @Override
-    public GeneBoolean deserialize(CompoundTag tag) {
-        return new GeneBoolean(
-                id,
-                tag.getBoolean(DATA),
-                tag.getBoolean(DOMINANT)
-        );
+    public boolean hidden() {
+        return !value; // So it doesn't display if the value is false
+    }
+
+    @Override
+    protected GeneBoolean deserializeValue(CompoundTag tag, boolean dominant) {
+        return new GeneBoolean(id, tag.getBoolean(DATA), dominant);
+    }
+
+    @Override
+    public MutableComponent getValueComponent() {
+        return Component.translatable(TranslationKeys.geneBooleanValue(id, value));
     }
 
     @Override
     public MutableComponent getComponent() {
-        return Component.translatable(
-                "gene.complicated_bees." + id.getPath() + "." + value
-        );
+        return Component.translatable(TranslationKeys.gene(id()));
     }
 
     @Override
     public GeneBoolean copy() {
-        return new GeneBoolean(
-                id,
-                value,
-                dominant
-        );
+        return new GeneBoolean(id, value, dominant);
     }
 }

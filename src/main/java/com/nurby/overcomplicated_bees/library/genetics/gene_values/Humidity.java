@@ -1,5 +1,6 @@
 package com.nurby.overcomplicated_bees.library.genetics.gene_values;
 
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
@@ -37,9 +38,7 @@ public final class Humidity {
     }
 
     public static MutableComponent getComponent(float humidity) {
-        return Component.translatable(
-                "gene.complicated_bees.humidity." + Humidity.getName(humidity)
-        );
+        return Component.translatable(TranslationKeys.geneValue("humidity", Humidity.getName(humidity)));
     }
 
     public static float getFromBiome(Holder<Biome> biome) {
@@ -54,51 +53,51 @@ public final class Humidity {
         return getFromBiome(level.getBiome(pos));
     }
 
-    public static float increase(float humidity) {
-        if (humidity < NORMAL) {
-            return NORMAL;
+    public static int getLevel(float humidity) {
+        if (humidity >= WET) {
+            return 2;
+        } else if (humidity >= NORMAL) {
+            return 1;
         }
-
-        if (humidity < WET) {
-            return WET;
-        }
-
-        return humidity;
+        return 0;
     }
 
-    public static float decrease(float humidity) {
-        if (humidity > WET) {
-            return WET;
-        }
-
-        if (humidity > NORMAL) {
-            return NORMAL;
-        }
-
-        return DRY;
+    public static float fromLevel(int level) {
+        return switch (level) {
+            case 0 -> DRY;
+            case 1 -> NORMAL;
+            case 2 -> WET;
+            default -> throw new IllegalArgumentException("Invalid humidity level: " + level);
+        };
     }
 
-    public static float increaseBy(float humidity, int stages) {
-        if (stages < 0) {
+    public static float modifier(float humidity, int stages) {
+        if (stages > 0) {
+            return increaseBy(humidity, stages);
+        } else if (stages < 0) {
             return decreaseBy(humidity, -stages);
         }
 
-        for (int i = 0; i < stages; i++) {
-            humidity = increase(humidity);
-        }
-
         return humidity;
     }
 
+    public static float increase(float humidity) {
+        int currentLevel = getLevel(humidity);
+        return fromLevel(Math.min(currentLevel + 1, 2));
+    }
+
+    public static float decrease(float humidity) {
+        int currentLevel = getLevel(humidity);
+        return fromLevel(Math.max(currentLevel - 1, 0));
+    }
+
+    public static float increaseBy(float humidity, int stages) {
+        int currentLevel = getLevel(humidity);
+        return fromLevel(Math.min(currentLevel + stages, 2));
+    }
+
     public static float decreaseBy(float humidity, int stages) {
-        if (stages < 0) {
-            return increaseBy(humidity, -stages);
-        }
-
-        for (int i = 0; i < stages; i++) {
-            humidity = decrease(humidity);
-        }
-
-        return humidity;
+        int currentLevel = getLevel(humidity);
+        return fromLevel(Math.max(currentLevel - stages, 0));
     }
 }

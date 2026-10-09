@@ -1,0 +1,64 @@
+{
+  "nest_color": "#4d453d",
+  "outline_color": "#4d453d",
+  "texture": "complicated_bees:item/bee/red_bee",
+  "default_chromosome": {
+    "active_time": {
+      "active_time": "cathemeral",
+      "dominant": false
+    },
+    "cave_dwelling": {
+      "value": true
+    },
+    "flower": {
+      "flower": "complicated_bees:debris"
+    },
+    "humidity": {
+      "humidity": "dry",
+      "tolerance": "UP_1"
+    },
+    "lifespan": {
+      "lifespan": "average",
+      "dominant": false
+    },
+    "productivity": {
+      "productivity": "slowest",
+      "dominant": false
+    },
+    "temperature": {
+      "temperature": "hot",
+      "tolerance": "UP_1"
+    },
+    "territory": {
+      "territory": [
+        4,
+        2
+      ]
+    },
+    "weatherproof": {
+      "value": true
+    }
+  },
+  "dominant": false,
+  "foil": true,
+  "products": [
+    {
+      "ingredient": {
+        "item": "complicated_bees:comb"
+      },
+      "components": {
+        "complicated_bees:comb_type": "complicated_bees:simmering"
+      },
+      "chance": 0.3
+    },
+    {
+      "ingredient": {
+        "item": "complicated_bees:comb"
+      },
+      "components": {
+        "complicated_bees:comb_type": "complicated_bees:netherite"
+      },
+      "chance": 0.1
+    }
+  ]
+}

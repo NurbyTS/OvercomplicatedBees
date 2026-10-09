@@ -9,57 +9,26 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 
-public record BeeProduct(
-        Ingredient ingredient,
-        int count,
-        DataComponentPatch components,
-        float chance
-) {
+public record BeeProduct(Ingredient ingredient, int count, DataComponentPatch components, float chance) {
 
-    public static final Codec<BeeProduct> CODEC =
-            RecordCodecBuilder.create(instance ->
-                    instance.group(
-                            Ingredient.CODEC
-                                    .fieldOf("ingredient")
-                                    .forGetter(BeeProduct::ingredient),
+    public static final Codec<BeeProduct> CODEC = RecordCodecBuilder.create(instance -> instance.group(Ingredient.CODEC.fieldOf("ingredient").forGetter(BeeProduct::ingredient),
 
-                            Codec.INT
-                                    .optionalFieldOf("count", 1)
-                                    .forGetter(BeeProduct::count),
+            Codec.INT.optionalFieldOf("count", 1).forGetter(BeeProduct::count),
 
-                            DataComponentPatch.CODEC
-                                    .optionalFieldOf(
-                                            "components",
-                                            DataComponentPatch.EMPTY
-                                    )
-                                    .forGetter(BeeProduct::components),
+            DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(BeeProduct::components),
 
-                            Codec.FLOAT
-                                    .optionalFieldOf("chance", 1.0f)
-                                    .forGetter(BeeProduct::chance)
+            Codec.FLOAT.optionalFieldOf("chance", 1.0f).forGetter(BeeProduct::chance)
 
-                    ).apply(instance, BeeProduct::new)
-            );
+    ).apply(instance, BeeProduct::new));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, BeeProduct> STREAM_CODEC =
-            ByteBufCodecs.fromCodecWithRegistries(CODEC);
+    public static final StreamCodec<RegistryFriendlyByteBuf, BeeProduct> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
     public BeeProduct(Ingredient ingredient, float chance) {
-        this(
-                ingredient,
-                1,
-                DataComponentPatch.EMPTY,
-                chance
-        );
+        this(ingredient, 1, DataComponentPatch.EMPTY, chance);
     }
 
     public BeeProduct(Ingredient ingredient, int count, float chance) {
-        this(
-                ingredient,
-                count,
-                DataComponentPatch.EMPTY,
-                chance
-        );
+        this(ingredient, count, DataComponentPatch.EMPTY, chance);
     }
 
     public ItemStack getStack() {
@@ -108,8 +77,6 @@ public record BeeProduct(
             return stack;
         }
 
-        return Math.random() < stackChance
-                ? stack
-                : ItemStack.EMPTY;
+        return Math.random() < stackChance ? stack : ItemStack.EMPTY;
     }
 }

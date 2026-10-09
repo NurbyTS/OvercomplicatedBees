@@ -3,72 +3,37 @@ package com.nurby.overcomplicated_bees.library.bee.species;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.nurby.overcomplicated_bees.library.bee.BeeProduct;
-import com.nurby.overcomplicated_bees.library.misc.Color;
 import com.nurby.overcomplicated_bees.library.genetics.Chromosome;
+import com.nurby.overcomplicated_bees.library.misc.Color;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 
-public record SpeciesDefinition(
-        Color color,
-        Color stripeColor,
-        Color outlineColor,
-        Color nestColor,
-        Chromosome defaultChromosome,
-        boolean foil,
-        List<BeeProduct> products,
-        List<BeeProduct> specialtyProducts
-) {
+public record SpeciesDefinition(Color nestColor, Color primaryColor, Color outlineColor, ResourceLocation texture,
+                                ResourceLocation outlineTexture, Chromosome defaultChromosome, boolean foil,
+                                List<BeeProduct> products, List<BeeProduct> specialtyProducts) {
 
-    public static final Codec<SpeciesDefinition> CODEC =
-            RecordCodecBuilder.create(instance ->
-                    instance.group(
-                            Color.CODEC
-                                    .optionalFieldOf("color", Color.DEFAULT)
-                                    .forGetter(SpeciesDefinition::color),
+    public static final Codec<SpeciesDefinition> CODEC = RecordCodecBuilder.create(instance -> instance.group(Color.CODEC.fieldOf("nest_color").forGetter(SpeciesDefinition::nestColor),
 
-                            Color.CODEC
-                                    .optionalFieldOf("stripe_color", Color.DEFAULT)
-                                    .forGetter(SpeciesDefinition::stripeColor),
+            Color.CODEC.optionalFieldOf("primary_color", Color.DEFAULT).forGetter(SpeciesDefinition::primaryColor),
 
-                            Color.CODEC
-                                    .optionalFieldOf("outline_color", Color.DEFAULT)
-                                    .forGetter(SpeciesDefinition::outlineColor),
+            Color.CODEC.optionalFieldOf("outline_color", Color.DEFAULT).forGetter(SpeciesDefinition::outlineColor),
 
-                            Color.CODEC
-                                    .optionalFieldOf("nest_color", Color.DEFAULT)
-                                    .forGetter(SpeciesDefinition::nestColor),
+            ResourceLocation.CODEC.optionalFieldOf("texture", ResourceLocation.fromNamespaceAndPath("complicated_bees", "item/bee/default_bee")).forGetter(SpeciesDefinition::texture),
 
-                            Chromosome.CODEC
-                                    .fieldOf("default_chromosome")
-                                    .forGetter(SpeciesDefinition::defaultChromosome),
+            ResourceLocation.CODEC.optionalFieldOf("outline_texture", ResourceLocation.fromNamespaceAndPath("complicated_bees", "item/bee/default_outline")).forGetter(SpeciesDefinition::outlineTexture),
 
-                            Codec.BOOL
-                                    .optionalFieldOf("foil", false)
-                                    .forGetter(SpeciesDefinition::foil),
+            Chromosome.CODEC.fieldOf("default_chromosome").forGetter(SpeciesDefinition::defaultChromosome),
 
-                            BeeProduct.CODEC
-                                    .listOf()
-                                    .optionalFieldOf("products", List.of())
-                                    .forGetter(SpeciesDefinition::products),
+            Codec.BOOL.optionalFieldOf("foil", false).forGetter(SpeciesDefinition::foil),
 
-                            BeeProduct.CODEC
-                                    .listOf()
-                                    .optionalFieldOf("specialty_products", List.of())
-                                    .forGetter(SpeciesDefinition::specialtyProducts)
+            BeeProduct.CODEC.listOf().optionalFieldOf("products", List.of()).forGetter(SpeciesDefinition::products),
 
-                    ).apply(instance, SpeciesDefinition::new)
-            );
+            BeeProduct.CODEC.listOf().optionalFieldOf("specialty_products", List.of()).forGetter(SpeciesDefinition::specialtyProducts)
+
+    ).apply(instance, SpeciesDefinition::new));
 
     public SpeciesDefinition withDefaultChromosome(Chromosome chromosome) {
-        return new SpeciesDefinition(
-                color,
-                stripeColor,
-                outlineColor,
-                nestColor,
-                chromosome,
-                foil,
-                products,
-                specialtyProducts
-        );
+        return new SpeciesDefinition(nestColor, primaryColor, outlineColor, texture, outlineTexture, chromosome, foil, products, specialtyProducts);
     }
 }

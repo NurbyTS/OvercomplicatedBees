@@ -1,38 +1,26 @@
 package com.nurby.overcomplicated_bees.library.genetics.gene_values;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-
 import java.util.List;
 
 public final class ActiveTime {
-    public static final List<Pair<Integer, Integer>> DIURNAL =
-            List.of(new ImmutablePair<>(0, 12000));
+    public static final List<TimeRange> DIURNAL = List.of(new TimeRange(0, 12000));
 
-    public static final List<Pair<Integer, Integer>> NOCTURNAL =
-            List.of(new ImmutablePair<>(13000, 24000));
+    public static final List<TimeRange> NOCTURNAL = List.of(new TimeRange(13000, 24000));
 
-    public static final List<Pair<Integer, Integer>> MATUTINAL =
-            List.of(new ImmutablePair<>(22300, 24000));
+    public static final List<TimeRange> MATUTINAL = List.of(new TimeRange(22300, 24000));
 
-    public static final List<Pair<Integer, Integer>> VESPERTINE =
-            List.of(new ImmutablePair<>(12000, 13702));
+    public static final List<TimeRange> VESPERTINE = List.of(new TimeRange(12000, 13702));
 
-    public static final List<Pair<Integer, Integer>> CREPUSCULAR =
-            List.of(
-                    new ImmutablePair<>(12000, 13702),
-                    new ImmutablePair<>(22300, 24000)
-            );
+    public static final List<TimeRange> CREPUSCULAR = List.of(new TimeRange(12000, 13702), new TimeRange(22300, 24000));
 
-    public static final List<Pair<Integer, Integer>> NEVER_SLEEPS =
-            List.of(new ImmutablePair<>(-1, -1));
+    public static final List<TimeRange> NEVER_SLEEPS = List.of(new TimeRange(-1, -1));
 
     public static final boolean CATHEMERAL = true;
 
     private ActiveTime() {
     }
 
-    public static List<Pair<Integer, Integer>> getFromName(String name) {
+    public static List<TimeRange> getFromName(String name) {
         return switch (name.toLowerCase()) {
             case "diurnal" -> DIURNAL;
             case "nocturnal" -> NOCTURNAL;
@@ -44,7 +32,7 @@ public final class ActiveTime {
         };
     }
 
-    public static String toName(List<Pair<Integer, Integer>> activeTime) {
+    public static String toName(List<TimeRange> activeTime) {
         if (DIURNAL.equals(activeTime)) {
             return "diurnal";
         }
@@ -76,18 +64,14 @@ public final class ActiveTime {
         return "unknown";
     }
 
-    public static boolean isWithin(
-            List<Pair<Integer, Integer>> activeTimes,
-            long time
-    ) {
+    public static boolean isWithin(List<TimeRange> activeTimes, long time) {
         long dayTime = time % 24000L;
 
-        for (Pair<Integer, Integer> range : activeTimes) {
-            if (range.getLeft() == -1 && range.getRight() == -1) {
-                return true;
-            }
+        for (TimeRange range : activeTimes) {
+            boolean startMatch = range.start() == -1 || dayTime >= range.start();
+            boolean endMatch = range.end() == -1 || dayTime <= range.end();
 
-            if (dayTime >= range.getLeft() && dayTime <= range.getRight()) {
+            if (startMatch && endMatch) {
                 return true;
             }
         }

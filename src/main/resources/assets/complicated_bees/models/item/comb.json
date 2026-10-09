@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer1": "complicated_bees:item/honeycomb_holes",
+    "layer0": "complicated_bees:item/honeycomb"
+  }
+}

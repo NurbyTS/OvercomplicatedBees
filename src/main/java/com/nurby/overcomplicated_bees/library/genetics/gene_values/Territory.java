@@ -16,8 +16,6 @@ public record Territory(int horizontalRadius, int verticalRadius) {
         double dy = Math.abs(position.y - center.y);
         double dz = Math.abs(position.z - center.z);
 
-        return dx <= horizontalRadius
-                && dy <= verticalRadius
-                && dz <= horizontalRadius;
+        return dx <= horizontalRadius && dy <= verticalRadius && dz <= horizontalRadius;
     }
 }

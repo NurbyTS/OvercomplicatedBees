@@ -1,0 +1,52 @@
+{
+  "nest_color": "#aa42ff",
+  "outline_color": "#aa42ff",
+  "texture": "complicated_bees:item/bee/grayscale_bee",
+  "default_chromosome": {
+    "active_time": {
+      "active_time": "nocturnal"
+    },
+    "cave_dwelling": {
+      "value": true
+    },
+    "flower": {
+      "flower": "complicated_bees:calcite"
+    },
+    "lifespan": {
+      "lifespan": "shorter"
+    },
+    "productivity": {
+      "productivity": "slow"
+    },
+    "temperature": {
+      "temperature": "normal",
+      "tolerance": "UP_1"
+    },
+    "territory": {
+      "territory": [
+        4,
+        2
+      ]
+    }
+  },
+  "products": [
+    {
+      "ingredient": {
+        "item": "complicated_bees:comb"
+      },
+      "components": {
+        "complicated_bees:comb_type": "complicated_bees:rocky"
+      },
+      "chance": 0.3
+    },
+    {
+      "ingredient": {
+        "item": "complicated_bees:comb"
+      },
+      "components": {
+        "complicated_bees:comb_type": "complicated_bees:amethyst"
+      },
+      "chance": 0.15
+    }
+  ]
+}

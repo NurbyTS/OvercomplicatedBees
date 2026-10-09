@@ -1,13 +1,17 @@
 package com.nurby.overcomplicated_bees.library.genetics.gene_values;
 
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+
 public final class Productivity {
-    public static final float SLOWEST = 0.1f;
-    public static final float SLOWER = 0.3f;
-    public static final float SLOW = 0.5f;
-    public static final float AVERAGE = 0.8f;
-    public static final float FAST = 1.0f;
-    public static final float FASTER = 1.2f;
-    public static final float FASTEST = 1.5f;
+    public static final float SLOWEST = 0.3f;
+    public static final float SLOWER = 0.5f;
+    public static final float SLOW = 0.8f;
+    public static final float AVERAGE = 1.0f;
+    public static final float FAST = 1.2f;
+    public static final float FASTER = 1.5f;
+    public static final float FASTEST = 1.7f;
 
     private Productivity() {
     }
@@ -51,5 +55,21 @@ public final class Productivity {
             case "fastest" -> FASTEST;
             default -> throw new IllegalArgumentException("Unknown productivity: " + name);
         };
+    }
+
+    public static MutableComponent getComponent(float productivity) {
+        MutableComponent component = Component.translatable(TranslationKeys.geneValue("productivity", getName(productivity)));
+
+        if (productivity < SLOWEST) {
+            return component.append("-");
+        } else if (productivity > FASTEST) {
+            // For each 0.2 above FASTEST, add a "+"
+            int pluses = (int) ((productivity - FASTEST) / 0.2f);
+            for (int i = 0; i < pluses; i++) {
+                component.append("+");
+            }
+        }
+
+        return component;
     }
 }

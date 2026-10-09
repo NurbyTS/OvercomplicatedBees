@@ -17,11 +17,7 @@ public class GeneFertility extends Gene<Integer> {
         this.fertility = defaultValue();
     }
 
-    protected GeneFertility(
-            ResourceLocation id,
-            int fertility,
-            boolean dominant
-    ) {
+    protected GeneFertility(ResourceLocation id, int fertility, boolean dominant) {
         super(id, dominant);
         this.fertility = fertility;
     }
@@ -31,12 +27,25 @@ public class GeneFertility extends Gene<Integer> {
     }
 
     public GeneFertility setFertility(int fertility) {
+        if (fertility < 0) {
+            throw new IllegalArgumentException("Fertility cannot be negative: " + fertility);
+        }
         this.fertility = fertility;
         return this;
     }
 
     @Override
     public boolean isRequired() {
+        return true;
+    }
+
+    @Override
+    public int sortingOrder() {
+        return 7;
+    }
+
+    @Override
+    public boolean advanced() {
         return true;
     }
 
@@ -56,16 +65,12 @@ public class GeneFertility extends Gene<Integer> {
     }
 
     @Override
-    public GeneFertility deserialize(CompoundTag tag) {
-        return new GeneFertility(
-                id,
-                tag.getInt(DATA),
-                tag.getBoolean(DOMINANT)
-        );
+    protected GeneFertility deserializeValue(CompoundTag tag, boolean dominant) {
+        return new GeneFertility(id, tag.getInt(DATA), dominant);
     }
 
     @Override
-    public MutableComponent getComponent() {
+    public MutableComponent getValueComponent() {
         return Component.literal(Integer.toString(fertility));
     }
 

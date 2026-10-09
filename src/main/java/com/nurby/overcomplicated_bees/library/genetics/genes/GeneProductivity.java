@@ -2,6 +2,7 @@ package com.nurby.overcomplicated_bees.library.genetics.genes;
 
 import com.nurby.overcomplicated_bees.library.genetics.Gene;
 import com.nurby.overcomplicated_bees.library.genetics.gene_values.Productivity;
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -18,11 +19,7 @@ public class GeneProductivity extends Gene<Float> {
         this.productivity = defaultValue();
     }
 
-    protected GeneProductivity(
-            ResourceLocation id,
-            float productivity,
-            boolean dominant
-    ) {
+    protected GeneProductivity(ResourceLocation id, float productivity, boolean dominant) {
         super(id, dominant);
         this.productivity = productivity;
     }
@@ -42,6 +39,16 @@ public class GeneProductivity extends Gene<Float> {
     }
 
     @Override
+    public int sortingOrder() {
+        return 2;
+    }
+
+    @Override
+    public boolean advanced() {
+        return false;
+    }
+
+    @Override
     public Float value() {
         return productivity;
     }
@@ -57,58 +64,31 @@ public class GeneProductivity extends Gene<Float> {
     }
 
     @Override
-    public GeneProductivity deserialize(CompoundTag tag) {
-        return new GeneProductivity(
-                id,
-                tag.getFloat(DATA),
-                tag.getBoolean(DOMINANT)
-        );
+    protected GeneProductivity deserializeValue(CompoundTag tag, boolean dominant) {
+        float productivity;
+
+        // Handle string-based productivity names from old_species format
+        if (tag.contains(DATA) && tag.get(DATA) instanceof net.minecraft.nbt.StringTag) {
+            productivity = Productivity.getFromName(tag.getString(DATA));
+        } else {
+            productivity = tag.getFloat(DATA);
+        }
+
+        return new GeneProductivity(id, productivity, dominant);
     }
 
     @Override
     public MutableComponent getComponent() {
-        MutableComponent component = Component.translatable(
-                "gene.complicated_bees.productivity." + getProductivityName()
-        );
-
-        if (productivity <= 0.1f) {
-            return component.append("+");
-        }
-        else if (productivity >= 1.7f) {
-            // For each 0.2 above 1.7, add a "+"
-            int pluses = (int) ((productivity - 1.7f) / 0.2f);
-            for (int i = 0; i < pluses; i++) {
-                component.append("+");
-            }
-        }
-
-        return component;
+        return getValueComponent().append(" ").append(Component.translatable(TranslationKeys.GENE_PRODUCTIVITY_APPEND)); // So it's not Productivity:
     }
 
-    private String getProductivityName() {
-       if (productivity < 0.3f) {
-            return "slowest";
-        } else if (productivity < 0.5f) {
-            return "slower";
-        } else if (productivity < 0.8f) {
-            return "slow";
-        } else if (productivity < 1.0f) {
-            return "average";
-        } else if (productivity < 1.2f) {
-            return "fast";
-        } else if (productivity < 1.5f) {
-            return "faster";
-        } else {
-            return "fastest";
-        }
+    @Override
+    public MutableComponent getValueComponent() {
+        return Productivity.getComponent(productivity);
     }
 
     @Override
     public GeneProductivity copy() {
-        return new GeneProductivity(
-                id,
-                productivity,
-                dominant
-        );
+        return new GeneProductivity(id, productivity, dominant);
     }
 }

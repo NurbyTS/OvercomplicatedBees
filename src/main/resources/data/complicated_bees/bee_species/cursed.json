@@ -1,0 +1,50 @@
+{
+  "nest_color": "#404040",
+  "outline_color": "#404040",
+  "texture": "complicated_bees:item/bee/red_bee",
+  "default_chromosome": {
+    "active_time": {
+      "active_time": "cathemeral"
+    },
+    "cave_dwelling": {
+      "value": true
+    },
+    "effect": {
+      "effect": "complicated_bees:cursed"
+    },
+    "flower": {
+      "flower": "complicated_bees:nether"
+    },
+    "humidity": {
+      "humidity": "normal",
+      "tolerance": "NONE"
+    },
+    "lifespan": {
+      "lifespan": "shorter"
+    },
+    "productivity": {
+      "productivity": "slower"
+    },
+    "temperature": {
+      "temperature": "hellish",
+      "tolerance": "DOWN_1"
+    },
+    "territory": {
+      "territory": [
+        4,
+        2
+      ]
+    }
+  },
+  "products": [
+    {
+      "ingredient": {
+        "item": "complicated_bees:comb"
+      },
+      "components": {
+        "complicated_bees:comb_type": "complicated_bees:simmering"
+      },
+      "chance": 0.35
+    }
+  ]
+}

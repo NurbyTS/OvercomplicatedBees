@@ -6,41 +6,21 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
-public record BeeState(
-        float age,
-        boolean analyzed,
-        int generation
-) {
+public record BeeState(float age, boolean analyzed, int generation) {
 
-    public static final Codec<BeeState> CODEC =
-            RecordCodecBuilder.create(instance ->
-                    instance.group(
-                            Codec.FLOAT
-                                    .fieldOf("age")
-                                    .forGetter(BeeState::age),
+    public static final Codec<BeeState> CODEC = RecordCodecBuilder.create(instance -> instance.group(Codec.FLOAT.fieldOf("age").forGetter(BeeState::age),
 
-                            Codec.BOOL
-                                    .fieldOf("analyzed")
-                                    .forGetter(BeeState::analyzed),
+            Codec.BOOL.fieldOf("analyzed").forGetter(BeeState::analyzed),
 
-                            Codec.INT
-                                    .fieldOf("generation")
-                                    .forGetter(BeeState::generation)
+            Codec.INT.fieldOf("generation").forGetter(BeeState::generation)
 
-                    ).apply(instance, BeeState::new)
-            );
+    ).apply(instance, BeeState::new));
 
-    public static final StreamCodec<RegistryFriendlyByteBuf, BeeState> STREAM_CODEC =
-            StreamCodec.composite(
-                    ByteBufCodecs.FLOAT,
-                    BeeState::age,
+    public static final StreamCodec<RegistryFriendlyByteBuf, BeeState> STREAM_CODEC = StreamCodec.composite(ByteBufCodecs.FLOAT, BeeState::age,
 
-                    ByteBufCodecs.BOOL,
-                    BeeState::analyzed,
+            ByteBufCodecs.BOOL, BeeState::analyzed,
 
-                    ByteBufCodecs.INT,
-                    BeeState::generation,
+            ByteBufCodecs.INT, BeeState::generation,
 
-                    BeeState::new
-            );
+            BeeState::new);
 }

@@ -1,0 +1,55 @@
+{
+  "nest_color": "#fc030f",
+  "outline_color": "#fc030f",
+  "texture": "complicated_bees:item/bee/campestral_bee",
+  "default_chromosome": {
+    "active_time": {
+      "active_time": "never_sleeps",
+      "dominant": false
+    },
+    "effect": {
+      "effect": "complicated_bees:plains_terraform"
+    },
+    "fertility": {
+      "fertility": 2,
+      "dominant": false
+    },
+    "flower": {
+      "flower": "complicated_bees:flower"
+    },
+    "humidity": {
+      "humidity": "normal",
+      "tolerance": "BOTH_1",
+      "dominant": false
+    },
+    "lifespan": {
+      "lifespan": "longest",
+      "dominant": false
+    },
+    "productivity": {
+      "productivity": "slowest"
+    },
+    "temperature": {
+      "temperature": "normal",
+      "tolerance": "BOTH_2",
+      "dominant": false
+    },
+    "territory": {
+      "territory": [
+        9,
+        5
+      ]
+    }
+  },
+  "products": [
+    {
+      "ingredient": {
+        "item": "complicated_bees:comb"
+      },
+      "components": {
+        "complicated_bees:comb_type": "complicated_bees:mysterious"
+      },
+      "chance": 0.25
+    }
+  ]
+}

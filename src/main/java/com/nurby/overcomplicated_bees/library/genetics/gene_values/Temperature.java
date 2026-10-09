@@ -1,5 +1,6 @@
 package com.nurby.overcomplicated_bees.library.genetics.gene_values;
 
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -36,9 +37,7 @@ public final class Temperature {
     }
 
     public static MutableComponent getComponent(float temperature) {
-        MutableComponent component = Component.translatable(
-                "gene.complicated_bees.temperature." + Temperature.getName(temperature)
-        );
+        MutableComponent component = Component.translatable(TranslationKeys.geneValue("temperature", Temperature.getName(temperature)));
 
         if (temperature < -0.35f) {
             int minuses = (int) ((-0.35f - temperature) / 0.2f);
@@ -75,69 +74,66 @@ public final class Temperature {
             return HELLISH;
         }
 
-        return level.getBiome(pos)
-                .value()
-                .getModifiedClimateSettings()
-                .temperature();
+        return level.getBiome(pos).value().getModifiedClimateSettings().temperature();
     }
 
-    public static float increase(float temperature, int stages) {
-        if (stages == 0) {
-            return temperature;
+    public static int getLevel(float temperature) {
+        if (temperature > HELLISH) {
+            return 6;
+        } else if (temperature > HOT) {
+            return 5;
+        } else if (temperature > WARM) {
+            return 4;
+        } else if (temperature > NORMAL) {
+            return 3;
+        } else if (temperature > COLD) {
+            return 2;
+        } else if (temperature > ICY) {
+            return 1;
         }
+        return 0;
+    }
 
-        float result = temperature;
+    public static float fromLevel(int level) {
+        return switch (level) {
+            case 0 -> FROZEN;
+            case 1 -> ICY;
+            case 2 -> COLD;
+            case 3 -> NORMAL;
+            case 4 -> WARM;
+            case 5 -> HOT;
+            case 6 -> HELLISH;
+            default -> throw new IllegalArgumentException("Invalid temperature level: " + level);
+        };
+    }
 
+    public static float modifier(float temperature, int stages) {
         if (stages > 0) {
-            for (int i = 0; i < stages; i++) {
-                result = increase(result);
-            }
-        } else {
-            for (int i = 0; i < -stages; i++) {
-                result = decrease(result);
-            }
+            return increaseBy(temperature, stages);
+        } else if (stages < 0) {
+            return decreaseBy(temperature, -stages);
         }
 
-        return result;
+        return temperature;
+    }
+
+    public static float increaseBy(float temperature, int stages) {
+        int currentLevel = getLevel(temperature);
+        return fromLevel(Math.min(currentLevel + stages, 6));
     }
 
     public static float increase(float temperature) {
-        if (temperature <= ICY) {
-            return COLD;
-        }
-        if (temperature <= COLD) {
-            return NORMAL;
-        }
-        if (temperature <= NORMAL) {
-            return WARM;
-        }
-        if (temperature <= WARM) {
-            return HOT;
-        }
-        if (temperature <= HOT) {
-            return HELLISH;
-        }
+        int currentLevel = getLevel(temperature);
+        return fromLevel(Math.min(currentLevel + 1, 6));
+    }
 
-        return temperature + 0.2f;
+    public static float decreaseBy(float temperature, int stages) {
+        int currentLevel = getLevel(temperature);
+        return fromLevel(Math.max(currentLevel - stages, 0));
     }
 
     public static float decrease(float temperature) {
-        if (temperature > HOT) {
-            return HOT;
-        }
-        if (temperature > WARM) {
-            return WARM;
-        }
-        if (temperature > NORMAL) {
-            return NORMAL;
-        }
-        if (temperature > COLD) {
-            return COLD;
-        }
-        if (temperature > ICY) {
-            return ICY;
-        }
-
-        return temperature - 0.2f;
+        int currentLevel = getLevel(temperature);
+        return fromLevel(Math.max(currentLevel - 1, 0));
     }
 }

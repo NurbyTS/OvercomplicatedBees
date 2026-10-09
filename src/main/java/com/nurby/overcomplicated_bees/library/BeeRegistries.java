@@ -10,10 +10,7 @@ import net.neoforged.neoforge.registries.RegistryBuilder;
 public class BeeRegistries {
     public static final ResourceKey<Registry<Gene<?>>> GENE_KEY = ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(OvercomplicatedBees.MOD_ID, "gene"));
 
-    public static final Registry<Gene<?>> GENE_REGISTRY = new RegistryBuilder<>(GENE_KEY)
-            .sync(true)
-            .defaultKey(ResourceLocation.fromNamespaceAndPath(OvercomplicatedBees.MOD_ID, "unknown"))
-            .create();
+    public static final Registry<Gene<?>> GENE_REGISTRY = new RegistryBuilder<>(GENE_KEY).sync(true).defaultKey(ResourceLocation.fromNamespaceAndPath(OvercomplicatedBees.MOD_ID, "unknown")).create();
 
     public static Object getGeneDefault(ResourceLocation id) {
         Gene<?> gene = GENE_REGISTRY.get(id);

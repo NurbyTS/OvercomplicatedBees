@@ -1,5 +1,9 @@
 package com.nurby.overcomplicated_bees.library.genetics.gene_values;
 
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+
 public final class Lifespan {
     public static final int IMMORTAL = -1;
     public static final int DEAD = 0;
@@ -63,5 +67,23 @@ public final class Lifespan {
             case "longest" -> LONGEST;
             default -> throw new IllegalArgumentException("Unknown lifespan: " + name);
         };
+    }
+
+    public static MutableComponent getComponent(int lifespan) {
+        MutableComponent component = Component.translatable(TranslationKeys.geneValue("lifespan", getName(lifespan)));
+
+        if (lifespan > LONGEST) {
+            int pluses = (lifespan - LONGEST) / 15;
+            for (int i = 0; i < pluses; i++) {
+                component.append("+");
+            }
+        } else if (lifespan < SHORTEST && lifespan >= 0) {
+            int minuses = (SHORTEST - lifespan) / 5;
+            for (int i = 0; i < minuses; i++) {
+                component.append("-");
+            }
+        }
+
+        return component;
     }
 }

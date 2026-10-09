@@ -1,5 +1,9 @@
 package com.nurby.overcomplicated_bees.library.genetics.gene_values;
 
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+
 public record Tolerance(int up, int down) {
     public static final Tolerance NONE = new Tolerance(0, 0);
 
@@ -20,10 +24,6 @@ public record Tolerance(int up, int down) {
     public static final Tolerance DOWN_3 = new Tolerance(0, 3);
     public static final Tolerance DOWN_2 = new Tolerance(0, 2);
     public static final Tolerance DOWN_1 = new Tolerance(0, 1);
-
-    public int collapsed() {
-        return up - down;
-    }
 
     public static Tolerance getFromString(String name) {
         return switch (name.toUpperCase()) {
@@ -60,10 +60,16 @@ public record Tolerance(int up, int down) {
             case -3 -> DOWN_3;
             case -4 -> DOWN_4;
             case -5 -> DOWN_5;
-            default -> throw new IllegalArgumentException(
-                    "Unknown collapsed tolerance: " + collapsed
-            );
+            default -> throw new IllegalArgumentException("Unknown collapsed tolerance: " + collapsed);
         };
+    }
+
+    public static MutableComponent getComponent(Tolerance tolerance) {
+        return Component.translatable(TranslationKeys.geneValue("tolerance", tolerance.getName()));
+    }
+
+    public int collapsed() {
+        return up - down;
     }
 
     public String getName() {

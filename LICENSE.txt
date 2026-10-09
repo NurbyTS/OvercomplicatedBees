@@ -19,3 +19,27 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+Credits and Attribution
+
+This project is inspired by and builds upon the work of the following projects
+and creators:
+
+* Forestry
+  Original creator: mezz
+  https://github.com/ForestryMC/ForestryMC
+
+* Complicated Bees
+  Creator: ACCBDD
+  This project is based in part on the 1.21.1 port of Complicated Bees:
+  https://github.com/ACCBDD/complicated_bees/tree/1.21.1
+
+* Gendustry
+  Creator: thedarkcolour
+  This project is also based in part on the 1.20.1 port of Gendustry and
+  uses textures from that project. The Gendustry port is being used as a
+  reference for this project's implementation and is planned to be ported
+  to a later version as well:
+  https://github.com/thedarkcolour/gendustry/tree/1.20.1
+
+All third-party assets remain subject to their respective original licenses.

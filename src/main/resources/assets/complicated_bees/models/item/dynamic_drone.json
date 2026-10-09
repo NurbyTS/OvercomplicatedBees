@@ -1,0 +1,8 @@
+{
+  "loader": "complicated_bees:bee",
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "complicated_bees:item/bee/default_bee",
+    "layer1": "complicated_bees:item/bee/default_outline"
+  }
+}

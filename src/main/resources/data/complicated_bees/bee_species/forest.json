@@ -1,38 +1,55 @@
 {
-  "color": "#d99b35",
-  "stripe_color": "#4a321b",
-  "outline_color": "#24180d",
-  "nest_color": "#8f6631",
+  "nest_color": "#33fce8",
+  "outline_color": "#33fce8",
   "default_chromosome": {
-    "lifespan": {
-      "lifespan": 2
+    "active_time": {
+      "active_time": "diurnal"
+    },
+    "cave_dwelling": {
+      "value": false
+    },
+    "effect": {
+      "effect": "complicated_bees:none"
     },
     "fertility": {
-      "fertility": 3
-    },
-    "productivity": {
-      "productivity": 1.25
-    },
-    "territory": {
-      "territory": [6, 3]
+      "fertility": 2
     },
     "flower": {
-      "flower": "minecraft:flowers"
+      "flower": "complicated_bees:flowers"
+    },
+    "humidity": {
+      "humidity": "normal",
+      "tolerance": "NONE"
+    },
+    "lifespan": {
+      "lifespan": "shortest"
+    },
+    "productivity": {
+      "productivity": "slowest"
+    },
+    "temperature": {
+      "temperature": "normal",
+      "tolerance": "DOWN_1"
+    },
+    "territory": {
+      "territory": [
+        4,
+        2
+      ]
+    },
+    "weatherproof": {
+      "value": false
     }
   },
   "products": [
     {
       "ingredient": {
-        "item": "minecraft:honeycomb"
+        "item": "complicated_bees:comb"
       },
-      "count": 1,
-      "chance": 0.9
-    },
-    {
-      "ingredient": {
-        "item": "minecraft:oak_sapling"
+      "components": {
+        "complicated_bees:comb_type": "complicated_bees:honey"
       },
-      "chance": 0.05
+      "chance": 0.35
     }
   ]
 }

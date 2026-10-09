@@ -2,6 +2,7 @@ package com.nurby.overcomplicated_bees.library.genetics.genes;
 
 import com.nurby.overcomplicated_bees.OvercomplicatedBees;
 import com.nurby.overcomplicated_bees.library.genetics.Gene;
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -20,11 +21,7 @@ public class GeneSpecies extends Gene<ResourceLocation> {
         this.species = defaultValue();
     }
 
-    protected GeneSpecies(
-            ResourceLocation id,
-            ResourceLocation species,
-            boolean dominant
-    ) {
+    protected GeneSpecies(ResourceLocation id, ResourceLocation species, boolean dominant) {
         super(id, dominant);
         this.species = Objects.requireNonNull(species);
     }
@@ -34,7 +31,7 @@ public class GeneSpecies extends Gene<ResourceLocation> {
     }
 
     public GeneSpecies setSpecies(ResourceLocation species) {
-        this.species = species;
+        this.species = Objects.requireNonNull(species);
         return this;
     }
 
@@ -44,8 +41,23 @@ public class GeneSpecies extends Gene<ResourceLocation> {
     }
 
     @Override
+    public int sortingOrder() {
+        return 0;
+    }
+
+    @Override
+    public boolean advanced() {
+        return false;
+    }
+
+    @Override
     public ResourceLocation value() {
         return species;
+    }
+
+    @Override
+    public boolean hidden() {
+        return true;
     }
 
     @Override
@@ -59,52 +71,23 @@ public class GeneSpecies extends Gene<ResourceLocation> {
     }
 
     @Override
-    public GeneSpecies deserialize(CompoundTag tag) {
+    protected GeneSpecies deserializeValue(CompoundTag tag, boolean dominant) {
         ResourceLocation species = ResourceLocation.tryParse(tag.getString(DATA));
 
         if (species == null) {
             throw new IllegalArgumentException("Invalid species ID: " + tag.getString(DATA));
         }
 
-        return new GeneSpecies(
-                id,
-                species,
-                tag.getBoolean(DOMINANT)
-        );
+        return new GeneSpecies(id, species, dominant);
     }
 
     @Override
-    public MutableComponent getComponent() {
-        return Component.translatable(
-                "species." + species.getNamespace() + "." + species.getPath()
-        );
+    public MutableComponent getValueComponent() {
+        return Component.translatable(TranslationKeys.species(species));
     }
 
     @Override
     public GeneSpecies copy() {
-        return new GeneSpecies(
-                id,
-                species,
-                dominant
-        );
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!(obj instanceof GeneSpecies other)) {
-            return false;
-        }
-
-        return super.equals(obj)
-                && species.equals(other.species);
-    }
-
-    @Override
-    public int hashCode() {
-        return 31 * super.hashCode() + species.hashCode();
+        return new GeneSpecies(id, species, dominant);
     }
 }

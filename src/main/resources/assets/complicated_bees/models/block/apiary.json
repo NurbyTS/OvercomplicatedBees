@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "down": "complicated_bees:block/apiary_bottom",
+    "east": "complicated_bees:block/apiary_side",
+    "north": "complicated_bees:block/apiary_side",
+    "particle": "complicated_bees:block/apiary_side",
+    "south": "complicated_bees:block/apiary_side",
+    "up": "complicated_bees:block/apiary_top",
+    "west": "complicated_bees:block/apiary_side"
+  }
+}

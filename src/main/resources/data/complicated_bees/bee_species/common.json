@@ -1,0 +1,43 @@
+{
+  "nest_color": "#c2c2c2",
+  "outline_color": "#c2c2c2",
+  "default_chromosome": {
+    "active_time": {
+      "active_time": "diurnal"
+    },
+    "flower": {
+      "flower": "complicated_bees:flower"
+    },
+    "humidity": {
+      "humidity": "normal",
+      "tolerance": "NONE"
+    },
+    "lifespan": {
+      "lifespan": "shorter"
+    },
+    "productivity": {
+      "productivity": "slower"
+    },
+    "temperature": {
+      "temperature": "normal",
+      "tolerance": "BOTH_1"
+    },
+    "territory": {
+      "territory": [
+        4,
+        2
+      ]
+    }
+  },
+  "products": [
+    {
+      "ingredient": {
+        "item": "complicated_bees:comb"
+      },
+      "components": {
+        "complicated_bees:comb_type": "complicated_bees:honey"
+      },
+      "chance": 0.4
+    }
+  ]
+}

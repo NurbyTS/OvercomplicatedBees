@@ -19,4 +19,8 @@ public final class SpeciesRegistry {
     public static void clear() {
         SPECIES.clear();
     }
+
+    public static Map<ResourceLocation, SpeciesDefinition> entries() {
+        return new HashMap<>(SPECIES);
+    }
 }
