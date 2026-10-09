@@ -2,9 +2,6 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
     }
-    plugins {
-        id 'org.jetbrains.kotlin.jvm' version '2.4.0'
-    }
 }
 
 plugins {

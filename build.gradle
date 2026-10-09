@@ -3,7 +3,6 @@ plugins {
     id 'maven-publish'
     id 'net.neoforged.moddev' version '2.0.141'
     id 'idea'
-    id 'org.jetbrains.kotlin.jvm'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -120,7 +119,6 @@ repositories {
     flatDir {
         dir 'libs'
     }
-    mavenCentral()
 }
 
 configurations {
@@ -157,7 +155,6 @@ dependencies {
         localRuntime "curse.maven:geckolib-388172:8350073"
         localRuntime "curse.maven:oh-the-trees-youll-grow-962544:8096180"
     }
-    testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
 
 def generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
@@ -208,7 +205,4 @@ idea {
         downloadSources = true
         downloadJavadoc = true
     }
-}
-kotlin {
-    jvmToolchain(21)
 }
