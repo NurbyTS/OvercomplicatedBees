@@ -47,29 +47,8 @@ public record Tolerance(int up, int down) {
         };
     }
 
-    public static Tolerance getFromCollapsed(int collapsed) {
-        return switch (collapsed) {
-            case 0 -> NONE;
-            case 1 -> UP_1;
-            case 2 -> UP_2;
-            case 3 -> UP_3;
-            case 4 -> UP_4;
-            case 5 -> UP_5;
-            case -1 -> DOWN_1;
-            case -2 -> DOWN_2;
-            case -3 -> DOWN_3;
-            case -4 -> DOWN_4;
-            case -5 -> DOWN_5;
-            default -> throw new IllegalArgumentException("Unknown collapsed tolerance: " + collapsed);
-        };
-    }
-
     public static MutableComponent getComponent(Tolerance tolerance) {
         return Component.translatable(TranslationKeys.geneValue("tolerance", tolerance.getName()));
-    }
-
-    public int collapsed() {
-        return up - down;
     }
 
     public String getName() {

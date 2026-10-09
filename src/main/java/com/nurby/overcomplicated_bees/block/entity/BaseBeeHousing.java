@@ -1,4 +1,3 @@
-
 package com.nurby.overcomplicated_bees.block.entity;
 
 import com.nurby.overcomplicated_bees.library.apiary.BeeLogicHandler;
@@ -15,11 +14,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 public abstract class BaseBeeHousing extends BlockEntity implements IBeeHousing {
     public static final int BEE_SLOT_COUNT = 2;
@@ -49,12 +45,11 @@ public abstract class BaseBeeHousing extends BlockEntity implements IBeeHousing 
                 protected void onContentsChanged(int slot) {
                     setChanged();
 
-                    if (beeLogic != null) {
+                    // Only the queen/princess slot affects the flower search
+                    // and production progress.
+                    if (slot == 0) {
                         beeLogic.invalidateFlowerCache();
-
-                        if (slot == 0) {
-                            beeLogic.resetProgressForQueenChange();
-                        }
+                        beeLogic.resetProgressForQueenChange();
                     }
                 }
             };
@@ -77,10 +72,7 @@ public abstract class BaseBeeHousing extends BlockEntity implements IBeeHousing 
                 @Override
                 protected void onContentsChanged(int slot) {
                     setChanged();
-
-                    if (beeLogic != null) {
-                        beeLogic.invalidateFlowerCache();
-                    }
+                    beeLogic.invalidateFlowerCache();
                 }
             };
 
@@ -93,18 +85,24 @@ public abstract class BaseBeeHousing extends BlockEntity implements IBeeHousing 
         this.beeLogic = new BeeLogicHandler(this);
     }
 
+    // ==================== Inventory Access ====================
+
+    /**
+     * Direct inventory access for the menu.
+     * Do not expose these handlers to automation.
+     */
     @Override
-    public IItemHandler getBeeInventory() {
+    public ItemStackHandler getBeeInventory() {
         return beeInventory;
     }
 
     @Override
-    public IItemHandler getOutputInventory() {
+    public ItemStackHandler getOutputInventory() {
         return outputInventory;
     }
 
     @Override
-    public IItemHandler getFrameInventory() {
+    public ItemStackHandler getFrameInventory() {
         return frameInventory;
     }
 
@@ -135,16 +133,17 @@ public abstract class BaseBeeHousing extends BlockEntity implements IBeeHousing 
     public int getMenuStatus() {
         BeeProductionState state = beeLogic.getBeeState();
 
-        if (!state.getFailureReasons().isEmpty()) {
+        if (!state.failureReasons().isEmpty()) {
             return MENU_STATUS_ERROR;
+        }
+
+        // Output-full must win over ecstatic: production is halted either way.
+        if (beeLogic.isOutputBlocked()) {
+            return MENU_STATUS_OUTPUT_FULL;
         }
 
         if (state.isEcstatic()) {
             return MENU_STATUS_ECSTATIC;
-        }
-
-        if (beeLogic.isOutputBlocked()) {
-            return MENU_STATUS_OUTPUT_FULL;
         }
 
         return MENU_STATUS_NORMAL;
@@ -251,12 +250,17 @@ public abstract class BaseBeeHousing extends BlockEntity implements IBeeHousing 
             CompoundTag tag,
             HolderLookup.Provider registries
     ) {
-        super.handleUpdateTag(tag, registries);
+        // Intentionally no super call: the default would run the full
+        // loadAdditional on this lean client-only tag.
         beeLogic.loadClientState(tag, registries);
     }
 
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this);
+        // Use the lean update tag instead of the full save data
+        // (inventories + output buffer).
+        return ClientboundBlockEntityDataPacket.create(
+                this, BlockEntity::getUpdateTag
+        );
     }
 }

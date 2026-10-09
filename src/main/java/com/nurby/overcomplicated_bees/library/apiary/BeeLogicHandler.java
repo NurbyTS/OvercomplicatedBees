@@ -1,4 +1,3 @@
-
 package com.nurby.overcomplicated_bees.library.apiary;
 
 import com.nurby.overcomplicated_bees.library.bee.BeeProduct;
@@ -22,7 +21,7 @@ import com.nurby.overcomplicated_bees.registry.BeeDataComponents;
 import com.nurby.overcomplicated_bees.registry.BeeGenes;
 import com.nurby.overcomplicated_bees.registry.BeeItems;
 import com.nurby.overcomplicated_bees.service.BeeBreedingService;
-import com.nurby.overcomplicated_bees.util.BeeFailureReason;
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
 import com.nurby.overcomplicated_bees.util.GeneticHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -33,7 +32,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
@@ -62,8 +60,11 @@ public class BeeLogicHandler {
     private Float cachedTemperature;
     private Float cachedHumidity;
 
-    // Cached flower search
-    private ItemStack cachedQueen;
+    // Cached flower search. Keyed on the queen's flower gene value and the
+    // effective territory, NOT on the whole queen stack: the queen's age
+    // component changes every cycle and would defeat the cache.
+    // (Replace Object with the concrete type returned by GeneFlower#getFlower().)
+    private Object cachedFlowerKey;
     private Territory cachedFlowerTerritory;
     private List<BlockPos> cachedFlowers = List.of();
     private boolean flowerCacheDirty = true;
@@ -307,27 +308,23 @@ public class BeeLogicHandler {
 
         Territory territory = getEffectiveTerritory(queen);
 
-        boolean queenChanged = cachedQueen == null
-                || !ItemStack.matches(cachedQueen, queen);
+        GeneFlower flowerGene = GeneticHelper.getFlowerGene(queen);
+        var flower = flowerGene.getFlower();
 
-        boolean territoryChanged =
-                !territory.equals(cachedFlowerTerritory);
+        boolean keyChanged = !Objects.equals(flower, cachedFlowerKey)
+                || !territory.equals(cachedFlowerTerritory);
 
         boolean refreshDue =
                 level.getGameTime() >= nextFlowerRefreshTick;
 
-        if (queenChanged || territoryChanged
-                || flowerCacheDirty || refreshDue) {
-            GeneFlower flowerGene = GeneticHelper.getFlowerGene(queen);
-
-            FlowerDefinition definition =
-                    FlowerRegistry.get(flowerGene.getFlower());
+        if (keyChanged || flowerCacheDirty || refreshDue) {
+            FlowerDefinition definition = FlowerRegistry.get(flower);
 
             cachedFlowers = definition == null
                     ? List.of()
                     : findFlowers(level, territory, definition);
 
-            cachedQueen = queen.copy();
+            cachedFlowerKey = flower;
             cachedFlowerTerritory = territory;
             flowerCacheDirty = false;
             nextFlowerRefreshTick =
@@ -337,15 +334,11 @@ public class BeeLogicHandler {
         return cachedFlowers;
     }
 
-    private void clearFlowerCache() {
+    public void invalidateFlowerCache() {
         flowerCacheDirty = true;
-        cachedQueen = null;
+        cachedFlowerKey = null;
         cachedFlowerTerritory = null;
         cachedFlowers = List.of();
-    }
-
-    public void invalidateFlowerCache() {
-        clearFlowerCache();
     }
 
     public boolean hasNearbyFlowers(ItemStack queen) {
@@ -412,18 +405,24 @@ public class BeeLogicHandler {
             );
         }
 
+        // Output Buffer Status
+        if (outputBlocked) {
+            failures.add(Component.translatable(TranslationKeys.ERROR_OUTPUT_FULL));
+        }
+
         // Flowers
         boolean hasFlowers = hasNearbyFlowers(queen);
 
         if (!hasFlowers) {
-            failures.add(BeeFailureReason.flowerComponent(queen));
+            failures.add(TranslationKeys.flowerError(queen));
         }
 
-        // Temperature
+        // Temperature (computed once: each call walks the frame slots)
         GeneTemperature temperatureGene =
                 GeneticHelper.getTemperatureGene(queen);
 
-        int temperatureLevel = Temperature.getLevel(getTemperature());
+        float temperature = getTemperature();
+        int temperatureLevel = Temperature.getLevel(temperature);
         int preferredTemperatureLevel =
                 Temperature.getLevel(temperatureGene.getTemperature());
 
@@ -440,15 +439,16 @@ public class BeeLogicHandler {
 
         if (!temperatureComfortable) {
             failures.add(
-                    BeeFailureReason.tempComponent(queen, getTemperature())
+                    TranslationKeys.temperatureError(queen, temperature)
             );
         }
 
-        // Humidity
+        // Humidity (computed once)
         GeneHumidity humidityGene =
                 GeneticHelper.getHumidityGene(queen);
 
-        int humidityLevel = Humidity.getLevel(getHumidity());
+        float humidity = getHumidity();
+        int humidityLevel = Humidity.getLevel(humidity);
         int preferredHumidityLevel =
                 Humidity.getLevel(humidityGene.getHumidity());
 
@@ -465,7 +465,7 @@ public class BeeLogicHandler {
 
         if (!humidityComfortable) {
             failures.add(
-                    BeeFailureReason.humidComponent(queen, getHumidity())
+                    TranslationKeys.humidityError(queen, humidity)
             );
         }
 
@@ -478,7 +478,7 @@ public class BeeLogicHandler {
         );
 
         if (!active) {
-            failures.add(BeeFailureReason.timeComponent(queen));
+            failures.add(TranslationKeys.activeTimeError(queen));
         }
 
         // Weatherproofing
@@ -490,7 +490,7 @@ public class BeeLogicHandler {
         boolean exposedToRain = isExposedToRain();
 
         if (exposedToRain && !weatherproof) {
-            failures.add(BeeFailureReason.weatherComponent(queen));
+            failures.add(TranslationKeys.weatherError());
         }
 
         // Cave dwelling
@@ -502,9 +502,9 @@ public class BeeLogicHandler {
         boolean hasSky = hasSkyAccess();
 
         if (caveDwelling && hasSky) {
-            failures.add(BeeFailureReason.notUndergroundComponent(queen));
+            failures.add(TranslationKeys.notUndergroundError());
         } else if (!caveDwelling && !hasSky) {
-            failures.add(BeeFailureReason.undergroundComponent(queen));
+            failures.add(TranslationKeys.undergroundError());
         }
 
         if (!failures.isEmpty()) {
@@ -526,6 +526,17 @@ public class BeeLogicHandler {
         );
     }
 
+    /**
+     * Compares two states by value, so we only sync to clients on a real change.
+     */
+    private static boolean isSameState(
+            BeeProductionState a,
+            BeeProductionState b
+    ) {
+        return a.workingState() == b.workingState()
+                && a.failureReasons().equals(b.failureReasons());
+    }
+
     // ==================== Simulation Lifecycle ====================
 
     public void tick() {
@@ -533,7 +544,9 @@ public class BeeLogicHandler {
             return;
         }
 
+        boolean wasBlocked = outputBlocked;
         flushOutputBuffer();
+        boolean blockStateChanged = wasBlocked != outputBlocked;
 
         IItemHandler bees = housing.getBeeInventory();
         ItemStack first = bees.getStackInSlot(0);
@@ -548,17 +561,22 @@ public class BeeLogicHandler {
         matingProgress = 0;
 
         if (!isQueen(first)) {
+            // Include the blocked output error even if there is no queen
+            List<Component> noQueenFailures = outputBlocked
+                    ? List.of(Component.translatable(TranslationKeys.ERROR_OUTPUT_FULL))
+                    : List.of();
+
             boolean hadState =
-                    beeState.getWorkingState()
+                    beeState.workingState()
                             != BeeProductionState.WorkingState.NOT_WORKING
-                            || !beeState.getFailureReasons().isEmpty();
+                            || !beeState.failureReasons().equals(noQueenFailures);
 
             productionProgress = 0;
             environmentProgress = 0;
 
             beeState = new BeeProductionState(
                     BeeProductionState.WorkingState.NOT_WORKING,
-                    List.of()
+                    noQueenFailures
             );
 
             if (hadState) {
@@ -568,10 +586,17 @@ public class BeeLogicHandler {
             return;
         }
 
-        if (++environmentProgress >= ENVIRONMENT_CYCLE_LENGTH) {
+        // Force an immediate evaluation if the buffer status changes so the UI responds instantly
+        if (blockStateChanged || ++environmentProgress >= ENVIRONMENT_CYCLE_LENGTH) {
             environmentProgress = 0;
-            beeState = evaluateBee(first);
-            housing.syncBeeState();
+
+            BeeProductionState newState = evaluateBee(first);
+
+            // Only sync to clients when the state actually changed.
+            if (!isSameState(beeState, newState)) {
+                beeState = newState;
+                housing.syncBeeState();
+            }
         }
 
         if (!beeState.isWorking() || !outputBuffer.isEmpty()) {
@@ -592,8 +617,9 @@ public class BeeLogicHandler {
             ItemStack princess,
             ItemStack drone
     ) {
+        // Progress is intentionally not marked dirty every tick; losing at most
+        // one mating cycle on an unclean shutdown is harmless.
         if (++matingProgress < MATING_CYCLE_LENGTH) {
-            housing.setHousingChanged();
             return;
         }
 
@@ -605,8 +631,15 @@ public class BeeLogicHandler {
             return;
         }
 
+        // Consume a single drone; drones are stackable.
+        ItemStack remainingDrones = drone.copy();
+        remainingDrones.shrink(1);
+
         housing.setBeeStackInSlot(0, queen);
-        housing.setBeeStackInSlot(1, ItemStack.EMPTY);
+        housing.setBeeStackInSlot(
+                1,
+                remainingDrones.isEmpty() ? ItemStack.EMPTY : remainingDrones
+        );
 
         matingProgress = 0;
         productionProgress = 0;
@@ -780,9 +813,13 @@ public class BeeLogicHandler {
                 outputBuffer.removeFirst();
                 housing.setHousingChanged();
             } else {
+                // Only mark dirty if something was actually inserted.
+                if (remainder.getCount() != next.getCount()) {
+                    housing.setHousingChanged();
+                }
+
                 outputBuffer.set(0, remainder);
                 outputBlocked = true;
-                housing.setHousingChanged();
                 break;
             }
         }
@@ -924,11 +961,11 @@ public class BeeLogicHandler {
             CompoundTag tag,
             HolderLookup.Provider registries
     ) {
-        tag.putInt("bee_working_state", beeState.getWorkingState().ordinal());
+        tag.putInt("bee_working_state", beeState.workingState().ordinal());
 
         ListTag failures = new ListTag();
 
-        for (Component reason : beeState.getFailureReasons()) {
+        for (Component reason : beeState.failureReasons()) {
             CompoundTag entry = new CompoundTag();
 
             entry.putString(

@@ -102,38 +102,38 @@ public class ApiaryBlock extends BaseEntityBlock {
             if (blockEntity instanceof ApiaryBlockEntity apiary) {
                 if (!level.isClientSide()) {
                     for (int slot = 0;
-                         slot < apiary.getBeeItems().getSlots();
+                         slot < apiary.getBeeInventory().getSlots();
                          slot++) {
                         Containers.dropItemStack(
                                 level,
                                 pos.getX(),
                                 pos.getY(),
                                 pos.getZ(),
-                                apiary.getBeeItems().getStackInSlot(slot)
+                                apiary.getBeeInventory().getStackInSlot(slot)
                         );
                     }
 
                     for (int slot = 0;
-                         slot < apiary.getOutputItems().getSlots();
+                         slot < apiary.getOutputInventory().getSlots();
                          slot++) {
                         Containers.dropItemStack(
                                 level,
                                 pos.getX(),
                                 pos.getY(),
                                 pos.getZ(),
-                                apiary.getOutputItems().getStackInSlot(slot)
+                                apiary.getOutputInventory().getStackInSlot(slot)
                         );
                     }
 
                     for (int slot = 0;
-                         slot < apiary.getFrameItems().getSlots();
+                         slot < apiary.getFrameInventory().getSlots();
                          slot++) {
                         Containers.dropItemStack(
                                 level,
                                 pos.getX(),
                                 pos.getY(),
                                 pos.getZ(),
-                                apiary.getFrameItems().getStackInSlot(slot)
+                                apiary.getFrameInventory().getStackInSlot(slot)
                         );
                     }
 

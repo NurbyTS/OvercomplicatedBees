@@ -106,34 +106,4 @@ public final class Temperature {
             default -> throw new IllegalArgumentException("Invalid temperature level: " + level);
         };
     }
-
-    public static float modifier(float temperature, int stages) {
-        if (stages > 0) {
-            return increaseBy(temperature, stages);
-        } else if (stages < 0) {
-            return decreaseBy(temperature, -stages);
-        }
-
-        return temperature;
-    }
-
-    public static float increaseBy(float temperature, int stages) {
-        int currentLevel = getLevel(temperature);
-        return fromLevel(Math.min(currentLevel + stages, 6));
-    }
-
-    public static float increase(float temperature) {
-        int currentLevel = getLevel(temperature);
-        return fromLevel(Math.min(currentLevel + 1, 6));
-    }
-
-    public static float decreaseBy(float temperature, int stages) {
-        int currentLevel = getLevel(temperature);
-        return fromLevel(Math.max(currentLevel - stages, 0));
-    }
-
-    public static float decrease(float temperature) {
-        int currentLevel = getLevel(temperature);
-        return fromLevel(Math.max(currentLevel - 1, 0));
-    }
 }

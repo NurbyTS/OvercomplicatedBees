@@ -1,6 +1,11 @@
 package com.nurby.overcomplicated_bees.util;
 
+import com.nurby.overcomplicated_bees.library.genetics.gene_values.Humidity;
+import com.nurby.overcomplicated_bees.library.genetics.gene_values.Temperature;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 
 public final class TranslationKeys {
     public static final String TOOLTIP_MISSING_GENETICS = "gui.complicated_bees.tooltip.missing_genetics";
@@ -18,6 +23,7 @@ public final class TranslationKeys {
     public static final String ERROR_WEATHER = "gui.complicated_bees.error.weather";
     public static final String ERROR_ECSTATIC = "gui.complicated_bees.error.ecstatic";
     public static final String ERROR_NOT_UNDERGROUND = "gui.complicated_bees.error.not_underground";
+    public static final String ERROR_NONE = "gui.complicated_bees.error.none";
     public static final String ITEM_GROUP_BEES = "itemGroup.complicated_bees.bees";
     public static final String COMB_PREFIX = "comb.complicated_bees";
     public static final String GENE_LIFESPAN_APPEND = "gene.complicated_bees.lifespan.append";
@@ -77,5 +83,39 @@ public final class TranslationKeys {
 
     public static String error(String errorName) {
         return "gui.complicated_bees.error." + errorName;
+    }
+
+    // ==================== Error Components ====================
+
+    public static MutableComponent flowerError(ItemStack stack) {
+        return Component.translatable(ERROR_NO_FLOWER, GeneticHelper.getFlowerGene(stack).getValueComponent());
+    }
+
+    public static MutableComponent humidityError(ItemStack stack, float currentHumidity) {
+        return Component.translatable(ERROR_WRONG_HUMIDITY, Humidity.getComponent(currentHumidity), Humidity.getComponent(GeneticHelper.getHumidityGene(stack).getHumidity()));
+    }
+
+    public static MutableComponent temperatureError(ItemStack stack, float currentTemperature) {
+        return Component.translatable(ERROR_WRONG_TEMP, Temperature.getComponent(currentTemperature), Temperature.getComponent(GeneticHelper.getTemperatureGene(stack).getTemperature()));
+    }
+
+    public static MutableComponent activeTimeError(ItemStack stack) {
+        return Component.translatable(ERROR_WRONG_TIME, GeneticHelper.getActiveTimeGene(stack).getValueComponent());
+    }
+
+    public static MutableComponent undergroundError() {
+        return Component.translatable(ERROR_UNDERGROUND);
+    }
+
+    public static MutableComponent weatherError() {
+        return Component.translatable(ERROR_WEATHER);
+    }
+
+    public static MutableComponent ecstaticError() {
+        return Component.translatable(ERROR_ECSTATIC);
+    }
+
+    public static MutableComponent notUndergroundError() {
+        return Component.translatable(ERROR_NOT_UNDERGROUND);
     }
 }

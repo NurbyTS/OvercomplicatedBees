@@ -3,6 +3,7 @@ package com.nurby.overcomplicated_bees.client.gui;
 import com.nurby.overcomplicated_bees.menu.ApiaryMenu;
 import com.nurby.overcomplicated_bees.registry.BeeDataComponents;
 import com.nurby.overcomplicated_bees.util.GeneticHelper;
+import com.nurby.overcomplicated_bees.util.TranslationKeys;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -12,11 +13,14 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
+import java.util.Optional;
 
 public class ApiaryScreen extends AbstractContainerScreen<ApiaryMenu> {
+    private static final String MOD_ID = "complicated_bees";
+
     private static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath(
-                    "complicated_bees",
+                    MOD_ID,
                     "textures/gui/apiary.png"
             );
 
@@ -41,9 +45,6 @@ public class ApiaryScreen extends AbstractContainerScreen<ApiaryMenu> {
 
         imageWidth = 176;
         imageHeight = 187;
-
-        // The original screen did not display the inventory label.
-        inventoryLabelY = imageHeight - 10000;
     }
 
     @Override
@@ -90,31 +91,31 @@ public class ApiaryScreen extends AbstractContainerScreen<ApiaryMenu> {
             int left,
             int top
     ) {
-        ItemStack queen = menu.getQueen();
-
-        var lifespanGene = GeneticHelper.getLifespanGene(queen);
-        var beeState = queen.get(BeeDataComponents.STATE);
-
-        if (lifespanGene == null || beeState == null) {
-            return;
-        }
-
-        float lifespan = lifespanGene.getLifespan();
-
-        if (lifespan <= 0) {
-            return;
-        }
-
-        int progress = (int)Mth.clamp(
-                menu.getScaledProgress(beeState.age(), lifespan),
-                0,
-                BAR_HEIGHT
-        );
-
-        if (menu.hasFailureReasons()) {
+        // Failures and a blocked output both halt production, so show the
+        // red bar regardless of the queen's age.
+        if (menu.isBeeNotWorking() || menu.hasQueuedOutput()) {
             renderErrorBar(graphics, left, top);
             return;
         }
+
+        ItemStack queen = menu.getQueen();
+
+        var lifespanGene = GeneticHelper.getLifespanGene(queen);
+
+        if (lifespanGene == null || lifespanGene.getLifespan() <= 0) {
+            return;
+        }
+
+        // A queen without a STATE component is treated as age 0,
+        // matching BeeLogicHandler.
+        var beeState = queen.get(BeeDataComponents.STATE);
+        float age = beeState == null ? 0.0f : beeState.age();
+
+        int progress = (int) Mth.clamp(
+                menu.getScaledProgress(age, lifespanGene.getLifespan()),
+                0,
+                BAR_HEIGHT
+        );
 
         int textureU = menu.isEcstatic()
                 ? BAR_ECSTATIC_U
@@ -142,7 +143,7 @@ public class ApiaryScreen extends AbstractContainerScreen<ApiaryMenu> {
             return;
         }
 
-        int progress = (int)Mth.clamp(
+        int progress = (int) Mth.clamp(
                 menu.getScaledProgress(
                         menu.getMatingProgress(),
                         maxProgress
@@ -155,12 +156,13 @@ public class ApiaryScreen extends AbstractContainerScreen<ApiaryMenu> {
             return;
         }
 
+        // Fill from the bottom, sampling the matching bottom part of the strip.
         graphics.blit(
                 TEXTURE,
                 left + BAR_X,
                 top + BAR_Y + BAR_HEIGHT - progress,
                 BAR_NORMAL_U,
-                0,
+                BAR_HEIGHT - progress,
                 BAR_WIDTH,
                 progress
         );
@@ -207,7 +209,7 @@ public class ApiaryScreen extends AbstractContainerScreen<ApiaryMenu> {
             int mouseY,
             float partialTick
     ) {
-        renderBackground(graphics, mouseX, mouseY, partialTick);
+        // super.render already draws the background.
         super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, mouseX, mouseY);
     }
@@ -220,49 +222,33 @@ public class ApiaryScreen extends AbstractContainerScreen<ApiaryMenu> {
     ) {
         super.renderTooltip(graphics, mouseX, mouseY);
 
-        int left = (width - imageWidth) / 2;
-        int top = (height - imageHeight) / 2;
-
-        int relativeX = mouseX - left;
-        int relativeY = mouseY - top;
+        int relativeX = mouseX - (width - imageWidth) / 2;
+        int relativeY = mouseY - (height - imageHeight) / 2;
 
         boolean hoveringBar =
-                relativeX > 16
-                        && relativeX < 22
-                        && relativeY > 34
-                        && relativeY < 82;
+                relativeX >= BAR_X - 1
+                        && relativeX <= BAR_X + BAR_WIDTH
+                        && relativeY >= BAR_Y - 1
+                        && relativeY <= BAR_Y + BAR_HEIGHT;
 
-        if (!hoveringBar) {
-            return;
-        }
-
-        if (menu.hasQueen()) {
-            renderQueenTooltip(graphics, mouseX, mouseY);
-        } else if (menu.hasQueuedOutput()) {
-            graphics.renderTooltip(
-                    font,
-                    Component.translatable(
-                            "gui.complicated_bees.error.output_full"
-                    ),
-                    mouseX,
-                    mouseY
-            );
+        if (hoveringBar) {
+            renderBarTooltip(graphics, mouseX, mouseY);
         }
     }
 
-    private void renderQueenTooltip(
+    private void renderBarTooltip(
             GuiGraphics graphics,
             int mouseX,
             int mouseY
     ) {
-        if (menu.hasFailureReasons()) {
+        if (menu.hasQueen() && menu.isBeeNotWorking()) {
             List<Component> errors = menu.getFailureReasonComponents();
 
             if (!errors.isEmpty()) {
                 graphics.renderTooltip(
                         font,
                         errors,
-                        java.util.Optional.empty(),
+                        Optional.empty(),
                         mouseX,
                         mouseY
                 );
@@ -270,13 +256,13 @@ public class ApiaryScreen extends AbstractContainerScreen<ApiaryMenu> {
             }
         }
 
-        graphics.renderTooltip(
-                font,
-                Component.translatable(
-                        "gui.complicated_bees.error.none"
-                ),
-                mouseX,
-                mouseY
-        );
+        if (menu.hasQueen()) {
+            graphics.renderTooltip(
+                    font,
+                    Component.translatable(menu.isEcstatic() ? TranslationKeys.ERROR_ECSTATIC : TranslationKeys.ERROR_NONE),
+                    mouseX,
+                    mouseY
+            );
+        }
     }
 }

@@ -70,34 +70,4 @@ public final class Humidity {
             default -> throw new IllegalArgumentException("Invalid humidity level: " + level);
         };
     }
-
-    public static float modifier(float humidity, int stages) {
-        if (stages > 0) {
-            return increaseBy(humidity, stages);
-        } else if (stages < 0) {
-            return decreaseBy(humidity, -stages);
-        }
-
-        return humidity;
-    }
-
-    public static float increase(float humidity) {
-        int currentLevel = getLevel(humidity);
-        return fromLevel(Math.min(currentLevel + 1, 2));
-    }
-
-    public static float decrease(float humidity) {
-        int currentLevel = getLevel(humidity);
-        return fromLevel(Math.max(currentLevel - 1, 0));
-    }
-
-    public static float increaseBy(float humidity, int stages) {
-        int currentLevel = getLevel(humidity);
-        return fromLevel(Math.min(currentLevel + stages, 2));
-    }
-
-    public static float decreaseBy(float humidity, int stages) {
-        int currentLevel = getLevel(humidity);
-        return fromLevel(Math.max(currentLevel - stages, 0));
-    }
 }

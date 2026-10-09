@@ -15,8 +15,6 @@ public final class ActiveTime {
 
     public static final List<TimeRange> NEVER_SLEEPS = List.of(new TimeRange(-1, -1));
 
-    public static final boolean CATHEMERAL = true;
-
     private ActiveTime() {
     }
 
@@ -62,20 +60,5 @@ public final class ActiveTime {
         }
 
         return "unknown";
-    }
-
-    public static boolean isWithin(List<TimeRange> activeTimes, long time) {
-        long dayTime = time % 24000L;
-
-        for (TimeRange range : activeTimes) {
-            boolean startMatch = range.start() == -1 || dayTime >= range.start();
-            boolean endMatch = range.end() == -1 || dayTime <= range.end();
-
-            if (startMatch && endMatch) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }

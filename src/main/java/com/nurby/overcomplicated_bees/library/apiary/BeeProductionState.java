@@ -5,38 +5,13 @@ import net.minecraft.network.chat.Component;
 
 import java.util.List;
 
-public final class BeeProductionState {
+public record BeeProductionState(WorkingState workingState, List<Component> failureReasons) {
     public enum WorkingState {
-        NOT_WORKING,
-        COMFORTABLE,
-        ECSTATIC
-    }
-
-    private final WorkingState workingState;
-    private final List<Component> failureReasons;
-
-    public BeeProductionState(
-            WorkingState workingState,
-            List<? extends Component> failureReasons
-    ) {
-        this.workingState = workingState;
-        this.failureReasons = List.copyOf(failureReasons);
-    }
-
-    public WorkingState getWorkingState() {
-        return workingState;
-    }
-
-    public List<Component> getFailureReasons() {
-        return failureReasons;
+        NOT_WORKING, COMFORTABLE, ECSTATIC
     }
 
     public boolean isWorking() {
         return workingState != WorkingState.NOT_WORKING;
-    }
-
-    public boolean isComfortable() {
-        return workingState == WorkingState.COMFORTABLE;
     }
 
     public boolean isEcstatic() {

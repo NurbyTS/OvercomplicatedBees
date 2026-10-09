@@ -4,13 +4,17 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.nurby.overcomplicated_bees.OvercomplicatedBees;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ModelState;
+import net.minecraft.client.resources.model.UnbakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.model.CompositeModel;
 import net.neoforged.neoforge.client.model.geometry.IGeometryBakingContext;
@@ -22,6 +26,9 @@ import java.util.function.Function;
 
 public final class LayeredBeeGeometry implements IUnbakedGeometry<LayeredBeeGeometry> {
 
+    private static final ResourceLocation CONTEXT_NAME =
+            ResourceLocation.fromNamespaceAndPath(OvercomplicatedBees.MOD_ID, "layered_bee");
+
     private final BlockModel baseModel;
 
     public LayeredBeeGeometry(BlockModel baseModel) {
@@ -29,18 +36,37 @@ public final class LayeredBeeGeometry implements IUnbakedGeometry<LayeredBeeGeom
     }
 
     @Override
-    public BakedModel bake(IGeometryBakingContext context, ModelBaker baker, Function<Material, net.minecraft.client.renderer.texture.TextureAtlasSprite> spriteGetter, ModelState modelState, net.minecraft.client.renderer.block.model.ItemOverrides overrides) {
-        var particleSprite = spriteGetter.apply(new Material(TextureAtlas.LOCATION_BLOCKS, MissingTextureAtlasSprite.getLocation()));
+    public BakedModel bake(
+            IGeometryBakingContext context,
+            ModelBaker baker,
+            Function<Material, TextureAtlasSprite> spriteGetter,
+            ModelState modelState,
+            ItemOverrides overrides
+    ) {
+        // Use the model's own particle texture when it declares one,
+        // otherwise fall back to the missing texture.
+        Material particleMaterial = context.hasMaterial("particle")
+                ? context.getMaterial("particle")
+                : new Material(TextureAtlas.LOCATION_BLOCKS, MissingTextureAtlasSprite.getLocation());
 
-        StandaloneGeometryBakingContext beeContext = StandaloneGeometryBakingContext.builder(context).build(ResourceLocation.fromNamespaceAndPath(OvercomplicatedBees.MOD_ID, "layered_bee"));
+        TextureAtlasSprite particleSprite = spriteGetter.apply(particleMaterial);
 
-        LayeredBeeOverrideHandler dynamicOverrides = new LayeredBeeOverrideHandler(overrides, baker, beeContext, modelState, baseModel, spriteGetter);
+        StandaloneGeometryBakingContext beeContext =
+                StandaloneGeometryBakingContext.builder(context).build(CONTEXT_NAME);
 
-        return CompositeModel.Baked.builder(beeContext, particleSprite, dynamicOverrides, context.getTransforms()).build();
+        LayeredBeeOverrideHandler dynamicOverrides =
+                new LayeredBeeOverrideHandler(overrides, baker, modelState, baseModel, spriteGetter);
+
+        return CompositeModel.Baked
+                .builder(beeContext, particleSprite, dynamicOverrides, context.getTransforms())
+                .build();
     }
 
     @Override
-    public void resolveParents(Function<ResourceLocation, net.minecraft.client.resources.model.UnbakedModel> modelGetter, IGeometryBakingContext context) {
+    public void resolveParents(
+            Function<ResourceLocation, UnbakedModel> modelGetter,
+            IGeometryBakingContext context
+    ) {
         baseModel.resolveParents(modelGetter);
     }
 
@@ -52,10 +78,15 @@ public final class LayeredBeeGeometry implements IUnbakedGeometry<LayeredBeeGeom
         }
 
         @Override
-        public LayeredBeeGeometry read(JsonObject jsonObject, JsonDeserializationContext context) throws JsonParseException {
-            jsonObject.remove("loader");
+        public LayeredBeeGeometry read(
+                JsonObject jsonObject,
+                JsonDeserializationContext context
+        ) throws JsonParseException {
+            // Work on a copy so the caller's JSON is not mutated.
+            JsonObject modelJson = jsonObject.deepCopy();
+            modelJson.remove("loader");
 
-            BlockModel baseModel = context.deserialize(jsonObject, BlockModel.class);
+            BlockModel baseModel = context.deserialize(modelJson, BlockModel.class);
 
             return new LayeredBeeGeometry(baseModel);
         }

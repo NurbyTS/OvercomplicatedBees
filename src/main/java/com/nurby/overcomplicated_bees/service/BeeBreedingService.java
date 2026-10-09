@@ -1,5 +1,6 @@
 package com.nurby.overcomplicated_bees.service;
 
+import com.mojang.logging.LogUtils;
 import com.nurby.overcomplicated_bees.item.BeeItem;
 import com.nurby.overcomplicated_bees.library.BeeRegistries;
 import com.nurby.overcomplicated_bees.library.bee.component.BeeState;
@@ -13,15 +14,30 @@ import com.nurby.overcomplicated_bees.util.GeneticHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.Logger;
 
 import java.util.Objects;
 
-public class BeeBreedingService {
+public final class BeeBreedingService {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    private BeeBreedingService() {
+    }
+
     // Private util methods.
     private static Gene<?> selectRandomGene(RandomSource rand, Genome genome, ResourceLocation id) {
-        Chromosome chromosome = rand.nextBoolean() ? genome.primary() : genome.secondary();
+        boolean primaryFirst = rand.nextBoolean();
 
-        Gene<?> gene = chromosome.getGene(id);
+        Chromosome chosen = primaryFirst ? genome.primary() : genome.secondary();
+        Chromosome other = primaryFirst ? genome.secondary() : genome.primary();
+
+        Gene<?> gene = chosen.getGene(id);
+
+        if (gene == null) {
+            // The chosen chromosome lacks this gene (older save, newly added gene),
+            // so fall back to the other chromosome before using a default.
+            gene = other.getGene(id);
+        }
 
         if (gene != null) {
             return gene;
@@ -45,10 +61,16 @@ public class BeeBreedingService {
                 continue;
             }
 
-            if (!primaryGene.isDominant()) {
-                primary.setGene(id, secondaryGene);
-                secondary.setGene(id, primaryGene);
-            } else if (secondaryGene.isDominant() && rand.nextBoolean()) {
+            boolean primaryDominant = primaryGene.isDominant();
+            boolean secondaryDominant = secondaryGene.isDominant();
+
+            // If dominance differs, the dominant gene goes first.
+            // If it matches (both dominant or both recessive), it's a fair coin flip.
+            boolean swap = primaryDominant == secondaryDominant
+                    ? rand.nextBoolean()
+                    : secondaryDominant;
+
+            if (swap) {
                 primary.setGene(id, secondaryGene);
                 secondary.setGene(id, primaryGene);
             }
@@ -56,10 +78,6 @@ public class BeeBreedingService {
     }
 
     private static Genome breed(RandomSource rand, Genome left, Genome right) {
-        Objects.requireNonNull(rand, "Random source cannot be null");
-        Objects.requireNonNull(left, "Left genome cannot be null");
-        Objects.requireNonNull(right, "Right genome cannot be null");
-
         Chromosome primary = new Chromosome();
         Chromosome secondary = new Chromosome();
 
@@ -83,16 +101,19 @@ public class BeeBreedingService {
     /**
      * Creates a queen item stack from a princess and drone.
      * The queen inherits the princess's genome and state, with the drone as the mate.
+     *
+     * @return the queen, or {@link ItemStack#EMPTY} if either bee has no genetics
      */
     public static ItemStack createQueen(ItemStack princess, ItemStack drone) {
-        ItemStack queen = new ItemStack(BeeItems.QUEEN.get());
-
         Genome princessGenome = GeneticHelper.getGenome(princess);
         Genome droneGenome = GeneticHelper.getGenome(drone);
 
         if (princessGenome == null || droneGenome == null) {
-            throw new IllegalArgumentException("Cannot create a queen from bees without genetics.");
+            LOGGER.warn("Cannot create a queen from bees without genetics.");
+            return ItemStack.EMPTY;
         }
+
+        ItemStack queen = new ItemStack(BeeItems.QUEEN.get());
 
         GeneticHelper.setGenome(queen, princessGenome);
         GeneticHelper.setMate(queen, droneGenome);
@@ -113,16 +134,21 @@ public class BeeBreedingService {
      * Creates an offspring item from a queen.
      * If the queen has a mate, breeds the genomes. Otherwise, clones the queen's genome.
      * If the result is a princess, increments the generation count.
+     *
+     * @return the offspring, or {@link ItemStack#EMPTY} if the queen has no genetics
      */
     public static ItemStack createOffspring(RandomSource random, ItemStack queen, BeeItem resultType) {
-        ItemStack result = new ItemStack(resultType);
+        Objects.requireNonNull(random, "Random source cannot be null");
 
         Genome genome = GeneticHelper.getGenome(queen);
         Genome mate = GeneticHelper.getMate(queen);
 
         if (genome == null) {
-            return result;
+            LOGGER.warn("Cannot create offspring from a queen without genetics.");
+            return ItemStack.EMPTY;
         }
+
+        ItemStack result = new ItemStack(resultType);
 
         if (mate == null) {
             GeneticHelper.setGenome(result, genome);

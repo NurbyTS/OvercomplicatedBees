@@ -1,6 +1,5 @@
 package com.nurby.overcomplicated_bees.service;
 
-import com.nurby.overcomplicated_bees.library.bee.species.SpeciesDefinition;
 import com.nurby.overcomplicated_bees.library.bee.species.SpeciesRegistry;
 import com.nurby.overcomplicated_bees.library.genetics.genes.GeneSpecies;
 import com.nurby.overcomplicated_bees.library.misc.ClientOnly;
@@ -14,25 +13,35 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.fml.loading.FMLLoader;
 
 import java.util.List;
+import java.util.Objects;
 
-public class BeeTooltipService {
+public final class BeeTooltipService {
+    private BeeTooltipService() {
+    }
+
     public static MutableComponent getBeeName(ItemStack stack, String suffix) {
-        GeneSpecies gene1 = GeneticHelper.getSpeciesGene(stack);
-        if (gene1 == null) {
-            return Component.translatable(TranslationKeys.itemDynamic(suffix), TranslationKeys.speciesUnknown());
-        }
-        ResourceLocation species = gene1.getSpecies();
-        // Species should literally never be null in any usual case but fuck it why not
+        return Component.translatable(TranslationKeys.itemDynamic(suffix), getSpeciesName(stack));
+    }
+
+    /**
+     * Resolves the species argument for the bee's display name.
+     * Typed as Object because it is passed straight through as a translation argument,
+     * exactly as the individual branches were before.
+     */
+    private static Object getSpeciesName(ItemStack stack) {
+        GeneSpecies gene = GeneticHelper.getSpeciesGene(stack);
+        ResourceLocation species = gene == null ? null : gene.getSpecies();
+
         if (species == null) {
-            return Component.translatable(TranslationKeys.itemDynamic(suffix), TranslationKeys.speciesUnknown());
-        }
-        // Check if the bee ACTUALLY EXISTS.
-        SpeciesDefinition def = SpeciesRegistry.get(species);
-        if (def == null) {
-            return Component.translatable(TranslationKeys.itemDynamic(suffix), TranslationKeys.speciesUnloaded());
+            return TranslationKeys.speciesUnknown();
         }
 
-        return Component.translatable(TranslationKeys.itemDynamic(suffix), Component.translatable(TranslationKeys.species(species)));
+        // Check if the bee ACTUALLY EXISTS.
+        if (SpeciesRegistry.get(species) == null) {
+            return TranslationKeys.speciesUnloaded();
+        }
+
+        return Component.translatable(TranslationKeys.species(species));
     }
 
     /**
@@ -44,34 +53,47 @@ public class BeeTooltipService {
 
         GeneSpecies gene1 = GeneticHelper.getSpeciesGene(stack);
         GeneSpecies gene2 = GeneticHelper.getSecondarySpeciesGene(stack);
-        if (gene1 == null || gene2 == null) {
+
+        ResourceLocation species1 = gene1 == null ? null : gene1.getSpecies();
+        ResourceLocation species2 = gene2 == null ? null : gene2.getSpecies();
+
+        if (species1 == null || species2 == null) {
             tooltipComponents.add(Component.translatable(TranslationKeys.TOOLTIP_MISSING_GENETICS));
             return;
         }
 
-        ResourceLocation species1 = gene1.getSpecies();
-        ResourceLocation species2 = gene2.getSpecies();
+        Component name1 = Component.translatable(TranslationKeys.species(species1));
 
-        if (!species1.equals(species2)) {
-            tooltipComponents.add(Component.translatable(TranslationKeys.TOOLTIP_BEE_HYBRID, Component.translatable(TranslationKeys.species(species1)), Component.translatable(TranslationKeys.species(species2))).withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.BLUE));
+        if (!Objects.equals(species1, species2)) {
+            Component name2 = Component.translatable(TranslationKeys.species(species2));
+
+            tooltipComponents.add(
+                    Component.translatable(TranslationKeys.TOOLTIP_BEE_HYBRID, name1, name2)
+                            .withStyle(ChatFormatting.ITALIC, ChatFormatting.BLUE)
+            );
         } else {
-            tooltipComponents.add(Component.translatable(TranslationKeys.TOOLTIP_BEE_PUREBRED, Component.translatable(TranslationKeys.species(species1))).withStyle(ChatFormatting.ITALIC).withStyle(ChatFormatting.BLUE));
+            tooltipComponents.add(
+                    Component.translatable(TranslationKeys.TOOLTIP_BEE_PUREBRED, name1)
+                            .withStyle(ChatFormatting.ITALIC, ChatFormatting.BLUE)
+            );
         }
 
         if (FMLLoader.getDist().isClient()) {
             boolean advanced = ClientOnly.alt();
+
             if (!ClientOnly.shift() && !advanced) {
                 tooltipComponents.add(Component.translatable(TranslationKeys.TOOLTIP_SHIFT_GENES));
-            } else {
-                GeneticHelper.getAllGenes(stack).forEach(gene -> {
-                    if (!gene.hidden() && (!gene.advanced() || (gene.advanced() && advanced))) {
-                        tooltipComponents.add(gene.getComponent().withStyle(ChatFormatting.GRAY));
-                    }
-                });
+                return;
+            }
 
-                if (!advanced) {
-                    tooltipComponents.add(Component.translatable(TranslationKeys.TOOLTIP_ALT_GENES));
+            GeneticHelper.getAllGenes(stack).forEach(gene -> {
+                if (!gene.hidden() && (!gene.advanced() || advanced)) {
+                    tooltipComponents.add(gene.getComponent().withStyle(ChatFormatting.GRAY));
                 }
+            });
+
+            if (!advanced) {
+                tooltipComponents.add(Component.translatable(TranslationKeys.TOOLTIP_ALT_GENES));
             }
         }
     }

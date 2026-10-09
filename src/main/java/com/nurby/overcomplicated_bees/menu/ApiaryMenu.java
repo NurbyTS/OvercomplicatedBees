@@ -10,7 +10,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.SlotItemHandler;
@@ -101,21 +100,21 @@ public class ApiaryMenu extends AbstractContainerMenu {
     private void addApiarySlots(ApiaryBlockEntity apiary) {
         // Bee slots
         addSlot(new SlotItemHandler(
-                apiary.getBeeItems(), 0, 29, 38
+                apiary.getBeeInventory(), 0, 29, 38
         ));
         addSlot(new SlotItemHandler(
-                apiary.getBeeItems(), 1, 29, 63
+                apiary.getBeeInventory(), 1, 29, 63
         ));
 
         // Frame slots
         addSlot(new SlotItemHandler(
-                apiary.getFrameItems(), 0, 65, 23
+                apiary.getFrameInventory(), 0, 65, 23
         ));
         addSlot(new SlotItemHandler(
-                apiary.getFrameItems(), 1, 65, 51
+                apiary.getFrameInventory(), 1, 65, 51
         ));
         addSlot(new SlotItemHandler(
-                apiary.getFrameItems(), 2, 65, 79
+                apiary.getFrameInventory(), 2, 65, 79
         ));
 
         // Output slots, arranged around the production area
@@ -129,7 +128,7 @@ public class ApiaryMenu extends AbstractContainerMenu {
     }
 
     private void addOutputSlot(int index, int x, int y) {
-        addSlot(new SlotItemHandler(apiary.getOutputItems(), index, x, y) {
+        addSlot(new SlotItemHandler(apiary.getOutputInventory(), index, x, y) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
@@ -185,15 +184,15 @@ public class ApiaryMenu extends AbstractContainerMenu {
         } else {
             boolean moved = false;
 
-            if (apiary.getBeeItems().isItemValid(0, stack)) {
+            if (apiary.getBeeInventory().isItemValid(0, stack)) {
                 moved = moveItemStackTo(stack, 0, 1, false);
             }
 
-            if (!moved && apiary.getBeeItems().isItemValid(1, stack)) {
+            if (!moved && apiary.getBeeInventory().isItemValid(1, stack)) {
                 moved = moveItemStackTo(stack, 1, 2, false);
             }
 
-            if (!moved && apiary.getFrameItems().isItemValid(0, stack)) {
+            if (!moved && apiary.getFrameInventory().isItemValid(0, stack)) {
                 moved = moveItemStackTo(stack, 2, 5, false);
             }
 
@@ -223,10 +222,6 @@ public class ApiaryMenu extends AbstractContainerMenu {
         return apiary;
     }
 
-    public int getProductionProgress() {
-        return apiary.getProductionProgress();
-    }
-
     public int getMatingProgress() {
         return data.get(0);
     }
@@ -247,15 +242,11 @@ public class ApiaryMenu extends AbstractContainerMenu {
         return getSlot(0).getItem();
     }
 
-    public boolean isBreeding() {
-        return getMatingProgress() > 0;
-    }
-
     public boolean isEcstatic() {
         return getWorkingState() == 1;
     }
 
-    public boolean hasFailureReasons() {
+    public boolean isBeeNotWorking() {
         return getWorkingState() == 2;
     }
 
@@ -276,7 +267,7 @@ public class ApiaryMenu extends AbstractContainerMenu {
     }
 
     public List<Component> getFailureReasonComponents() {
-        return apiary.getBeeState().getFailureReasons();
+        return apiary.getBeeState().failureReasons();
     }
 
     public boolean hasPrincessAndDrone() {
